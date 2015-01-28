@@ -17,7 +17,8 @@ var VIEW3D = {
     container : null,
     water : null,
     directionalLight : null,
-    fps: 40,
+    fps: 30,  // 30 is current Firefox max, as far as I can tell.
+    // Chrome will go up to 60 which gets GPU hot.
     
     init_scene : function init_scene(){
 	
@@ -27,7 +28,7 @@ var VIEW3D = {
 	this.camera.lookAt(new THREE.Vector3(0, 0, 0));
 	
 	this.controls = new THREE.TrackballControls(this.camera);
-	this.controls.addEventListener( 'change', function(){VIEW3D.fps=40;});
+	this.controls.addEventListener( 'change', function(){VIEW3D.fps=30;});
 	
 	this.renderer = new THREE.WebGLRenderer({alpha: true});
 	this.renderer.setSize(window.innerWidth, window.innerHeight);
