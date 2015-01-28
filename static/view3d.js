@@ -400,7 +400,7 @@ angular.module('viewer', []).controller("MainController", function($scope, $http
 	    var geometry = new THREE.PlaneGeometry(2000, 2000, width-1, height-1);
 	    var scale_fac = 1.0 / $scope.distns;
 	    for(i = 0; i < data.length; i++){
-		geometry.vertices[i].z = (data[i] * $scope.wx_mult * scale_fac) + $scope.wx_add;
+		geometry.vertices[i].z = (data[i] * Number($scope.wx_mult) * scale_fac) + Number($scope.wx_add);
 	    }
 	    var mesh = new THREE.Mesh(geometry, material);
 	    mesh.castShadow = true;
