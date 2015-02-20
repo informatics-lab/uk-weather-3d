@@ -15,11 +15,89 @@
     <script src="extras/libs/stats.min.js"></script>
     <link href="view3d.css" rel="stylesheet">
     <!-- link href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet" -->
-    <script src="water-material.js"></script>
+    <!-- <script src="water-material.js"></script> -->
     <script src="extras/latlon.js"></script>
-    <script src="view3d.js"></script>
+
   </head>
   <body ng-app="viewer">
+  <script id="fragment_shader0" type="x-shader/x-fragment">
+    uniform float time;
+    varying vec2 vUv;
+    //varying float noise;
+    varying vec3 vNormal;
+
+    void main() {
+      vec2 position = -1.0 + 2.0 * vUv;
+
+      float red = abs(sin(position.x * position.y + time / 5.0));
+      float green = abs(sin(position.x * position.y + time / 4.0));
+      float blue = abs(sin(position.x * position.y + time / 3.0 ));
+      gl_FragColor = vec4(red, green, blue, 1.0);
+    }
+  </script>
+
+  <script id="fragment_shader1" type="x-shader/x-fragment">
+  // same name and type as VS
+  varying vec3 vNormal;
+  varying vec2 vUv;
+
+  void main() {
+
+      // calc the dot product and clamp
+      // 0 -> 1 rather than -1 -> 1
+      vec3 light = vec3(50.,20.,20.0);
+
+      // ensure it's normalized
+      light = normalize(light);
+
+      // calculate the dot product of
+      // the light to the vertex normal
+      float dProd = max(0.0, dot(vNormal, light));
+
+      // feed into our frag colour
+      gl_FragColor = vec4(dProd*0.5, dProd*0.6, dProd*0.4, 1.0);
+
+  }
+  </script>
+
+    <script id="vertexShader0" type="x-shader/x-vertex">
+
+      varying vec2 vUv;
+
+      void main()
+      {
+        vUv = uv;
+        vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+        gl_Position = projectionMatrix * mvPosition;
+      }
+
+    </script>
+
+    <script id="vertexShader1" type="x-shader/x-vertex">
+    attribute float displacement;
+    varying vec3 vNormal;
+    varying vec2 vUv;
+
+void main() {
+
+    vNormal = normal;
+    vUv = uv;
+    // push the displacement into the three
+    // slots of a 3D vector so it can be
+    // used in operations with other 3D
+    // vectors like positions and normals
+    vec3 newPosition = position +
+                       normal * vec3(displacement) * vec3(0.2,0.2,0.2);
+
+    gl_Position = projectionMatrix *
+                  modelViewMatrix *
+                  vec4(newPosition,1.0);
+
+}
+
+
+
+    </script>
    <div ng-controller="MainController">
     <!-- <div ng-style="overlayStyle" class="overlay"></div> -->
     <div ng-style="modalStyle" class="modal" ng-mouseenter="controlsActive(false)" ng-mouseleave="controlsActive(true)">
@@ -51,6 +129,7 @@
       <div id="webgl"></div>
     </div>
   </div><!-- MainController -->
+  <script src="view3d.js"></script>
   <script>
 
   document.getElementById('webgl').appendChild(VIEW3D.renderer.domElement);
