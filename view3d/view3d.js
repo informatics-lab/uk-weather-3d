@@ -34,7 +34,7 @@ var VIEW3D = {
 	this.renderer.setSize(window.innerWidth, window.innerHeight);
 	this.renderer.setClearColor( 0x6666ff, 1);
 
-	this.directionalLight = new THREE.DirectionalLight(0xffff55, 1);
+	this.directionalLight = new THREE.DirectionalLight(0xffffdd, 1);
 	//directionalLight.position.set(-600, 300, -600);
 	this.directionalLight.position.set(200, 800, 1500);
 	this.scene.add(this.directionalLight);
@@ -64,6 +64,7 @@ var VIEW3D = {
 
   // see http://www.html5rocks.com/en/tutorials/webgl/shaders/
 
+ 
   var uniforms1 = {
             time: { type: "f", value: 1.0 },
             resolution: { type: "v2", value: new THREE.Vector2() }
@@ -75,6 +76,7 @@ var VIEW3D = {
                   value: [] // an empty array
               }
   };
+  /*
   var shader_material = new THREE.ShaderMaterial( {
               attributes: attributes,
               uniforms: uniforms1,
@@ -82,7 +84,8 @@ var VIEW3D = {
               fragmentShader: document.getElementById( 'fragment_shader0' ).textContent
 
               } );
-
+	*/
+  var shader_material = new THREE.MeshPhongMaterial({color: 0x444488});
 
 
   var aMeshMirror = new THREE.Mesh(
@@ -90,14 +93,19 @@ var VIEW3D = {
            );
 	aMeshMirror.rotation.x = - Math.PI * 0.5;
 
+  aMeshMirror.castShadow = false;
+  aMeshMirror.receiveShadow = true;
+
+	/*
   var vertices = aMeshMirror.geometry.vertices;
   var values = attributes.displacement.value
   for(var v = 0; v < vertices.length; v++) {
                 values.push(Math.random() * 30);
   }
+	*/
 
 	this.scene.add(aMeshMirror);
-
+      
 	this.container = new THREE.Object3D();
 	this.scene.add(this.container);
     },
@@ -404,6 +412,7 @@ angular.module('viewer', []).controller("MainController", function($scope, $http
 	    texture.needsUpdate = true;
 	    var material = new THREE.MeshPhongMaterial({
 		    map: texture, transparent: true, specular: 0x444444, shininess: 10 });
+	    // (tranparent = true) allows sea to be seen.  Perhaps sea level should be dropped. 
 
 	    var geometry = new THREE.PlaneGeometry(2000, 2000, $scope.dem_width-1, $scope.dem_height-1);
 	    var scale_fac = 2000.0 /  ($scope.distns * 1000.0);
