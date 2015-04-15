@@ -26,9 +26,9 @@ body {
 /* just some content with arbitrary styles for explanation purposes */
 .modal {
     width: 200px;
-    height: 400px;
+    height: 300px;
     position: fixed;
-    top: 120px; 
+    top: 120px;
     left: 170px;
     margin-top: -100px;
     margin-left: -150px;

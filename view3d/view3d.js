@@ -121,6 +121,7 @@ var VIEW3D = {
 
     update: function update() {
       //this.water.material.uniforms.time.value += 1.0 / 60.0;
+      this.camera_position = VIEW3D.camera.position;
 	    this.controls.update();
       this.display();
     },
@@ -196,6 +197,11 @@ angular.module('viewer', []).controller("MainController", function($scope, $http
 	$scope.light_y = 1500;
 	$scope.light_z = -900;
 
+  $scope.camera_x = 0;
+  $scope.camera_y = 2000;
+  $scope.camera_z = 2000;
+
+
 	$scope.demdata = null;
 	$scope.rawdata = null;
 
@@ -210,12 +216,14 @@ angular.module('viewer', []).controller("MainController", function($scope, $http
 		$scope.getCoverage( $location.path(), params );
 	 });
 
-	$scope.$watch('light_x', function(){
-		VIEW3D.directionalLight.position.set(Number($scope.light_x), Number($scope.light_y), Number($scope.light_z));
-		//VIEW3D.water.sunDirection = VIEW3D.directionalLight.position.normalize();
-	    });
-	//$scope.$watch('light_y', function(){ ; });
-	//$scope.$watch('light_z', function(){ ; });
+   $scope.$watchGroup(['light_x','light_y','light_z'], function(){
+ 		VIEW3D.directionalLight.position.set(Number($scope.light_x), Number($scope.light_y), Number($scope.light_z));
+ 		//VIEW3D.water.sunDirection = VIEW3D.directionalLight.position.normalize();
+ 	});
+
+   $scope.$watchGroup(['camera_x','camera_y','camera_z'], function(){
+     VIEW3D.camera.position.set(Number($scope.camera_x), Number($scope.camera_y), Number($scope.camera_z));
+   });
 
 	$scope.getCameraPosition = function() {
 	    $scope.position = VIEW3D.camera.position;
@@ -376,6 +384,11 @@ angular.module('viewer', []).controller("MainController", function($scope, $http
 
 	$scope.controlsActive = function( enabled ){
 	    VIEW3D.controls.enabled = enabled;
+      $scope.position = VIEW3D.camera.position;
+      $scope.camera_x = $scope.position.x;
+      $scope.camera_y = $scope.position.y;
+      $scope.camera_z = $scope.position.z;
+
 	};
 
 	$scope.defaultDEMParams = {
