@@ -64,7 +64,7 @@ var VIEW3D = {
 
   // see http://www.html5rocks.com/en/tutorials/webgl/shaders/
 
- 
+
   var uniforms1 = {
             time: { type: "f", value: 1.0 },
             resolution: { type: "v2", value: new THREE.Vector2() }
@@ -105,7 +105,7 @@ var VIEW3D = {
 	*/
 
 	this.scene.add(aMeshMirror);
-      
+
 	this.container = new THREE.Object3D();
 	this.scene.add(this.container);
     },
@@ -174,7 +174,13 @@ angular.module('viewer', []).controller("MainController", function($scope, $http
 	//$scope.demProviderUrl = "/dembin";
 	//$scope.wxProviderUrl = "/capbin";
 
-	$scope.bboxes = {"UK":"-14,47.5,7,61", "Exeter":"-4.93266,49.31965,-2.12066,52.13165"};
+  $scope.cld_low = "/utils/cld_low.bin";
+  $scope.cld_med = "/utils/cld_med.bin";
+  $scope.cld_hig = "/utils/cld_hig.bin";
+
+
+	//$scope.bboxes = {"UK":"-14,47.5,7,61", "Exeter":"-4.93266,49.31965,-2.12066,52.13165"};
+  $scope.bboxes = {"UK":"-12,50,3.5,59", "Exeter":"-4.93266,49.31965,-2.12066,52.13165"};
 	$scope.bboxChoice = $scope.bboxes["UK"]; // watched
 	$scope.paletteColour0 =  "rgba(255,255,255,0)";
 	$scope.paletteColour1 =  "rgba(255,255,255,0.8)";
@@ -202,7 +208,7 @@ angular.module('viewer', []).controller("MainController", function($scope, $http
 		//console.log('SEARCH', params);
 		$scope.getDEM( $location.path(), params );
 		$scope.getCoverage( $location.path(), params );
-	    });
+	 });
 
 	$scope.$watch('light_x', function(){
 		VIEW3D.directionalLight.position.set(Number($scope.light_x), Number($scope.light_y), Number($scope.light_z));
@@ -216,8 +222,8 @@ angular.module('viewer', []).controller("MainController", function($scope, $http
 	}
 
 	$scope.rebuildWx = function() {
-	    VIEW3D.container.remove( $scope.wx_mesh );
-	    $scope.buildWx( $scope.rawdata, $scope.dem_width, $scope.dem_height );
+	    //VIEW3D.container.remove( $scope.wx_mesh );
+	    //$scope.buildWx( $scope.rawdata, $scope.dem_width, $scope.dem_height );
 	}
 
 	// If you'd rather not use the HTML5 canvas gradient trick, you can create
@@ -412,7 +418,7 @@ angular.module('viewer', []).controller("MainController", function($scope, $http
 	    texture.needsUpdate = true;
 	    var material = new THREE.MeshPhongMaterial({
 		    map: texture, transparent: true, specular: 0x444444, shininess: 10 });
-	    // (tranparent = true) allows sea to be seen.  Perhaps sea level should be dropped. 
+	    // (tranparent = true) allows sea to be seen.  Perhaps sea level should be dropped.
 
 	    var geometry = new THREE.PlaneGeometry(2000, 2000, $scope.dem_width-1, $scope.dem_height-1);
 	    var scale_fac = 2000.0 /  ($scope.distns * 1000.0);
@@ -431,7 +437,8 @@ angular.module('viewer', []).controller("MainController", function($scope, $http
 	    VIEW3D.container.add(mesh);
 	};
 
-	$scope.buildWx = function( data, width, height ){
+
+	$scope.buildWx = function( data, width, height, add, mult ){
 	    var texture = new THREE.Texture( $scope.generateCloudTexture(data, width, height) );
 	    texture.needsUpdate = true;
 	    var material = new THREE.MeshPhongMaterial({side: THREE.DoubleSide,
@@ -441,15 +448,16 @@ angular.module('viewer', []).controller("MainController", function($scope, $http
 
 	    var geometry = new THREE.PlaneGeometry(2000, 2000, width-1, height-1);
 	    var scale_fac = 1.0 / $scope.distns;
+      console.log("BUILDING WITH", add);
 	    for(i = 0; i < data.length; i++){
-		geometry.vertices[i].z = (data[i] * Number($scope.wx_mult) * scale_fac) + Number($scope.wx_add);
+      		geometry.vertices[i].z = (data[i] * mult * scale_fac) + add;
 	    }
 	    var mesh = new THREE.Mesh(geometry, material);
 	    mesh.castShadow = true;
 	    mesh.receiveShadow = true;
 	    mesh.position.z = 0;
 	    mesh.rotation.x = - Math.PI * 0.5;
-	    $scope.wx_mesh = mesh;
+	    //$scope.wx_mesh = mesh;
 	    VIEW3D.container.add(mesh);
 	};
 
@@ -477,27 +485,69 @@ angular.module('viewer', []).controller("MainController", function($scope, $http
 	    // DEM data unlikely to change so save to local storage.
 	    // Also source is external (NASA) provider, so be responsible.
 	    // To clear type 'localStorage.clear()' in console.
-	    if(localStorage[storageName]){
-		console.log('LOADING FROM LOCAL STORAGE', storageName);
-		$scope.demdata = JSON.parse(localStorage[storageName]);
-		$scope.buildLand( $scope.demdata );
-	    }else{
-		$http.get($scope.demProviderUrl, {params:requestParams, responseType: "arraybuffer"}  ).
-		success(function(data, status, headers, config) {
-			$scope.demdata = Array.prototype.slice.call(new Int16Array(data));
-			localStorage[storageName] = JSON.stringify($scope.demdata);
-			$scope.buildLand( $scope.demdata );
-		    }).
-		error(function(data, status, headers, config) {
-			console.log(status, data);
-		    });
-	    }
+	  //if(localStorage[storageName]){
+    if(0){
+		  console.log('LOADING FROM LOCAL STORAGE', storageName);
+		  $scope.demdata = JSON.parse(localStorage[storageName]);
+		  $scope.buildLand( $scope.demdata );
+	  }else{
+		  //$http.get($scope.demProviderUrl, {params:requestParams, responseType: "arraybuffer"}  ).
+      $http.get('/utils/dem.bin', {responseType: "arraybuffer"}).
+		  success(function(data, status, headers, config) {
+			  $scope.demdata = Array.prototype.slice.call(new Int16Array(data));
+			  localStorage[storageName] = JSON.stringify($scope.demdata);
+			  $scope.buildLand( $scope.demdata );
+		  }).
+		  error(function(data, status, headers, config) {
+			  console.log(status, data);
+		  });
+	  }
 	};
 
 	$scope.getCoverage = function( path, params ){
+    //for ($i of [{u:$scope.cld_low,a:5}]){
+    var list = [{u:$scope.cld_low,a:40},{u:$scope.cld_med,a:50},
+          {u:$scope.cld_hig, a:150}];
+
+    $http.get(list[0].u, { responseType: "arraybuffer"}  ).
+    success(function(data, status, headers, config) {
+      //$scope.rawdata = Array.prototype.slice.call(new Float32Array(data));
+      var rawdata = Array.prototype.slice.call(new Float32Array(data));
+      $scope.buildWx( rawdata, $scope.dem_width, $scope.dem_height,
+       list[0].a, Number($scope.wx_mult) );
+    }).
+    error(function(data, status, headers, config) {
+      alert( 'Unable to load sample cloud data. Get help.' );
+      console.log(status, data);
+    });
+    $http.get(list[1].u, { responseType: "arraybuffer"}  ).
+    success(function(data, status, headers, config) {
+      //$scope.rawdata = Array.prototype.slice.call(new Float32Array(data));
+      var rawdata = Array.prototype.slice.call(new Float32Array(data));
+      $scope.buildWx( rawdata, $scope.dem_width, $scope.dem_height,
+       list[1].a, Number($scope.wx_mult) );
+    }).
+    error(function(data, status, headers, config) {
+      alert( 'Unable to load sample cloud data. Get help.' );
+      console.log(status, data);
+    });
+    $http.get(list[2].u, { responseType: "arraybuffer"}  ).
+    success(function(data, status, headers, config) {
+      //$scope.rawdata = Array.prototype.slice.call(new Float32Array(data));
+      var rawdata = Array.prototype.slice.call(new Float32Array(data));
+      $scope.buildWx( rawdata, $scope.dem_width, $scope.dem_height,
+       list[2].a, Number($scope.wx_mult) );
+    }).
+    error(function(data, status, headers, config) {
+      alert( 'Unable to load sample cloud data. Get help.' );
+      console.log(status, data);
+    });
+};
+
+  /* = function( path, params ){
 	    var requestParams = angular.copy( $scope.defaultWxParams );
 	    for( k in params ){
-		requestParams[k] = params[k];
+		     requestParams[k] = params[k];
 	    }
 	    $http.get($scope.wxProviderUrl, {params:requestParams, responseType: "arraybuffer"}  ).
 	    success(function(data, status, headers, config) {
@@ -509,4 +559,5 @@ angular.module('viewer', []).controller("MainController", function($scope, $http
 		    console.log(status, data);
 		});
 	};
-    });
+  */
+});
