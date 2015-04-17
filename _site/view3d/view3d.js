@@ -7,8 +7,6 @@
 //
 //
 
-var socket = io();
-
 
 var VIEW3D = {
 
@@ -390,23 +388,8 @@ angular.module('viewer', []).controller("MainController", function($scope, $http
       $scope.camera_x = $scope.position.x;
       $scope.camera_y = $scope.position.y;
       $scope.camera_z = $scope.position.z;
-      socket.emit('camera-pos', VIEW3D.camera.position);
-      socket.emit('camera-ang', VIEW3D.camera.rotation);
+
 	};
-
-  socket.on('camera-pos', function(msg){
-    VIEW3D.camera.position.x = msg.x;
-    VIEW3D.camera.position.y = msg.y;
-    VIEW3D.camera.position.z = msg.z;
-  });
-
-  socket.on('camera-ang', function(msg){
-    console.log(VIEW3D.camera.rotation.x);
-    VIEW3D.camera.rotation._x = msg._x;
-    console.log(VIEW3D.camera.rotation.x);
-    VIEW3D.camera.rotation._y = msg._y;
-    VIEW3D.camera.rotation._z = msg._z;
-  });
 
 	$scope.defaultDEMParams = {
 	    request: "GetCoverage",
