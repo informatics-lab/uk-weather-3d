@@ -12,6 +12,7 @@
     <p id="">Y <a href="#" id="y-plus">+</a>/<a href="#" id="y-minus">-</a></p>
     <p id="">Z <a href="#" id="z-plus">+</a>/<a href="#" id="z-minus">-</a></p>
     <p id="reset"><a href="#" id="reset">Reset</a></p>
+    <p>Accelerometer: <input type="checkbox" id="accelerometer" value="accelerometer"></p>
     <p>
       <input type="text" id="x"><br />
       <input type="text" id="y"><br />
@@ -23,6 +24,7 @@
       var socket = io();
       var movement = 500;
       var accoffset = 200;
+      var roundoffset = 100;
       $( "#x-plus" ).click(function() {
         socket.emit('x-delta', movement);
       });
@@ -64,9 +66,11 @@
         $('#z').val(msg)
       });
       window.ondevicemotion = function(event) {
-        socket.emit('x', Math.round(event.accelerationIncludingGravity.x * accoffset / 10) * 10);
-        socket.emit('y', Math.round(event.accelerationIncludingGravity.y * accoffset / 10) * 10);
-        socket.emit('z', Math.round(event.accelerationIncludingGravity.z * accoffset / 10) * 10);
+        if ($('input#accelerometer').is(':checked')) {
+          socket.emit('x', Math.round(event.accelerationIncludingGravity.x * accoffset / roundoffset) * roundoffset);
+          socket.emit('y', Math.round(event.accelerationIncludingGravity.y * accoffset / roundoffset) * roundoffset);
+          socket.emit('z', Math.round(event.accelerationIncludingGravity.z * accoffset / roundoffset) * roundoffset);
+        }
       }
     </script>
   </body>
