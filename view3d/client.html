@@ -22,6 +22,7 @@
     <script>
       var socket = io();
       var movement = 500;
+      var acc-offset = 200;
       $( "#x-plus" ).click(function() {
         socket.emit('x-delta', movement);
       });
@@ -63,9 +64,9 @@
         $('#z').val(msg)
       });
       window.ondevicemotion = function(event) {
-        socket.emit('x', event.accelerationIncludingGravity.x);
-        socket.emit('y', event.accelerationIncludingGravity.y);
-        socket.emit('z', event.accelerationIncludingGravity.z);
+        socket.emit('x', event.accelerationIncludingGravity.x * acc-offset);
+        socket.emit('y', event.accelerationIncludingGravity.y * acc-offset);
+        socket.emit('z', event.accelerationIncludingGravity.z * acc-offset);
       }
     </script>
   </body>
