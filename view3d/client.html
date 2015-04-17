@@ -44,7 +44,7 @@
         socket.emit('reset', true);
       });
       $('#x').change(function (){
-        socket.emit('z', $('#x').val());
+        socket.emit('x', $('#x').val());
       });
       $('#y').change(function (){
         socket.emit('y', $('#y').val());
@@ -62,6 +62,11 @@
       socket.on('z', function(msg){
         $('#z').val(msg)
       });
+      window.ondevicemotion = function(event) {
+        socket.emit('x', event.accelerationIncludingGravity.x);
+        socket.emit('y', event.accelerationIncludingGravity.y);
+        socket.emit('z', event.accelerationIncludingGravity.z);
+      }
     </script>
   </body>
 </html>
