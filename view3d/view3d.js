@@ -391,6 +391,9 @@ angular.module('viewer', []).controller("MainController", function($scope, $http
       $scope.camera_y = $scope.position.y;
       $scope.camera_z = $scope.position.z;
       socket.emit('camera-pos', VIEW3D.camera.position);
+      socket.emit('x', VIEW3D.camera.position.x);
+      socket.emit('y', VIEW3D.camera.position.y);
+      socket.emit('z', VIEW3D.camera.position.z);
       socket.emit('camera-ang', VIEW3D.camera.rotation);
 	};
 
@@ -398,6 +401,37 @@ angular.module('viewer', []).controller("MainController", function($scope, $http
     VIEW3D.camera.position.x = msg.x;
     VIEW3D.camera.position.y = msg.y;
     VIEW3D.camera.position.z = msg.z;
+  });
+
+  socket.on('x-delta', function(msg){
+    VIEW3D.camera.position.x = VIEW3D.camera.position.x + parseInt(msg);
+    socket.emit('x', VIEW3D.camera.position.x);
+  });
+  socket.on('y-delta', function(msg){
+    VIEW3D.camera.position.y = VIEW3D.camera.position.y + parseInt(msg);
+    socket.emit('y', VIEW3D.camera.position.y);
+  });
+  socket.on('z-delta', function(msg){
+    VIEW3D.camera.position.z = VIEW3D.camera.position.z + parseInt(msg);
+    socket.emit('z', VIEW3D.camera.position.z);
+  });
+  socket.on('x', function(msg){
+    VIEW3D.camera.position.x = parseInt(msg);
+  });
+  socket.on('y', function(msg){
+    VIEW3D.camera.position.y = parseInt(msg);
+  });
+  socket.on('z', function(msg){
+    VIEW3D.camera.position.z = parseInt(msg);
+  });
+  socket.on('reset', function(msg){
+    VIEW3D.camera.position.x = 0;
+    VIEW3D.camera.position.y = 2000;
+    VIEW3D.camera.position.z = 2000;
+
+    socket.emit('x', VIEW3D.camera.position.x);
+    socket.emit('y', VIEW3D.camera.position.y);
+    socket.emit('z', VIEW3D.camera.position.z);
   });
 
   socket.on('camera-ang', function(msg){
