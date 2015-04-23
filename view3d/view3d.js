@@ -19,6 +19,8 @@ var VIEW3D = {
     directionalLight : null,
     fps: 30,  // 30 is current Firefox max, as far as I can tell.
     // Chrome will go up to 60 which gets GPU hot.
+    clock : null,
+    animator : null,
 
     init_scene : function init_scene(){
 
@@ -38,6 +40,8 @@ var VIEW3D = {
 	//directionalLight.position.set(-600, 300, -600);
 	this.directionalLight.position.set(200, 800, 1500);
 	this.scene.add(this.directionalLight);
+
+  this.clock = new THREE.Clock();
 
 	/*
 	var waterNormals = new THREE.ImageUtils.loadTexture('waternormals.jpg');
@@ -121,6 +125,10 @@ var VIEW3D = {
 
     update: function update() {
       //this.water.material.uniforms.time.value += 1.0 / 60.0;
+      var delta = this.clock.getDelta();
+      if(this.animator){
+        this.animator.update(1000 * delta);
+      }
       this.camera_position = VIEW3D.camera.position;
 	    this.controls.update();
       this.display();
@@ -130,7 +138,9 @@ var VIEW3D = {
       this.camera.aspect =  inWidth / inHeight;
       this.camera.updateProjectionMatrix();
       this.renderer.setSize(inWidth, inHeight);
-      this.canvas.html(this.renderer.domElement);
+      if(this.canvas){
+        this.canvas.html(this.renderer.domElement);
+      }
       this.display();
     }
 };
@@ -175,9 +185,19 @@ angular.module('viewer', []).controller("MainController", function($scope, $http
 	//$scope.demProviderUrl = "/dembin";
 	//$scope.wxProviderUrl = "/capbin";
 
-  $scope.cld_low = "/utils/cld_low.bin";
-  $scope.cld_med = "/utils/cld_med.bin";
-  $scope.cld_hig = "/utils/cld_hig.bin";
+  $scope.cld_low1 = "/utils/cld_low1.bin";
+  $scope.cld_low2 = "/utils/cld_low2.bin";
+  $scope.cld_low3 = "/utils/cld_low3.bin";
+  $scope.cld_low4 = "/utils/cld_low4.bin";
+  $scope.cld_med1 = "/utils/cld_med1.bin";
+  $scope.cld_med2 = "/utils/cld_med2.bin";
+  $scope.cld_med3 = "/utils/cld_med3.bin";
+  $scope.cld_med4 = "/utils/cld_med4.bin";
+  $scope.cld_hig1 = "/utils/cld_hig1.bin";
+  $scope.cld_hig2 = "/utils/cld_hig2.bin";
+  $scope.cld_hig3 = "/utils/cld_hig3.bin";
+  $scope.cld_hig4 = "/utils/cld_hig4.bin";
+
 
 
 	//$scope.bboxes = {"UK":"-14,47.5,7,61", "Exeter":"-4.93266,49.31965,-2.12066,52.13165"};
@@ -189,7 +209,9 @@ angular.module('viewer', []).controller("MainController", function($scope, $http
 
 	$scope.wx_mult = 200;
 	$scope.wx_add = 50;
-	$scope.wx_mesh = null;
+  $scope.wx_meshes = [];
+	$scope.wx_mesh = new THREE.Object3D();
+  $scope.frame = 0;
 
 	$scope.dem_mesh = null;
 
@@ -206,7 +228,7 @@ angular.module('viewer', []).controller("MainController", function($scope, $http
 	$scope.rawdata = null;
 
 	$scope.$watch('bboxChoice', function(){
-		if($scope.wx_mesh){VIEW3D.container.remove( $scope.wx_mesh )};
+		//if($scope.wx_mesh){VIEW3D.container.remove( $scope.wx_mesh )};
 		if($scope.dem_mesh){VIEW3D.container.remove( $scope.dem_mesh )};
 		var params = angular.copy( $location.search());
 		params.BBOX = $scope.bboxChoice;
@@ -450,8 +472,53 @@ angular.module('viewer', []).controller("MainController", function($scope, $http
 	    VIEW3D.container.add(mesh);
 	};
 
+  $scope.myAnimator = function(/*mesh, textures, numberOfTiles,*/ tileDispDuration){
+/*
+      this.mesh = mesh;
+      this.textures = textures;
+      this.numberOfTiles = numberOfTiles;
 
-	$scope.buildWx = function( data, width, height, add, mult ){
+
+
+
+            // which image is currently being displayed?
+            this.currentTile = 0;
+*/
+    // how long should each image be displayed?
+    this.tileDisplayDuration = tileDispDuration;
+    // how long has the current image been displayed?
+    this.currentDisplayTime = 0;
+    //$scope.frame = 0;
+    this.update = function( milliSec )
+            {
+                  this.currentDisplayTime += milliSec;
+                  while (this.currentDisplayTime > this.tileDisplayDuration)
+                  {
+                          this.currentDisplayTime -= this.tileDisplayDuration;
+                          VIEW3D.container.remove( $scope.wx_mesh );
+                          console.log('SHOWING', $scope.frame)
+                          $scope.wx_mesh = $scope.wx_meshes[$scope.frame++]
+                          VIEW3D.container.add( $scope.wx_mesh );
+                          if($scope.frame > 3){$scope.frame = 0;}
+/*
+                          this.currentTile++;
+                          if (this.currentTile == this.numberOfTiles)
+                                  this.currentTile = 0;
+        var material = new THREE.MeshBasicMaterial( {
+          map: this.textures[ this.currentTile ],
+          transparent: true,
+          opacity: 0.8,
+          overdraw: 0.5 } );
+        this.mesh.material = material;
+        this.textures[ this.currentTile ].needsUpdate;
+        //console.log('showing tile ' + this.currentTile);
+*/
+                  }
+    };
+  }
+
+
+	$scope.buildWx = function( dest, data, width, height, add, mult ){
 	    var texture = new THREE.Texture( $scope.generateCloudTexture(data, width, height) );
 	    texture.needsUpdate = true;
 	    var material = new THREE.MeshPhongMaterial({side: THREE.DoubleSide,
@@ -470,8 +537,8 @@ angular.module('viewer', []).controller("MainController", function($scope, $http
 	    mesh.receiveShadow = true;
 	    mesh.position.z = 0;
 	    mesh.rotation.x = - Math.PI * 0.5;
-	    //$scope.wx_mesh = mesh;
-	    VIEW3D.container.add(mesh);
+	    dest.add(mesh);
+	    //VIEW3D.container.add(mesh);
 	};
 
 	$scope.getDEM = function( path, params ){
@@ -517,44 +584,41 @@ angular.module('viewer', []).controller("MainController", function($scope, $http
 	  }
 	};
 
+  $scope.fetchBuild = function( item, dest ){
+    $http.get(item.u, { responseType: "arraybuffer"}  ).
+    success(function(data, status, headers, config) {
+      var rawdata = Array.prototype.slice.call(new Float32Array(data));
+      $scope.buildWx( dest, rawdata, $scope.dem_width, $scope.dem_height,
+       item.a, Number($scope.wx_mult) );
+    }).
+    error(function(data, status, headers, config) {
+      alert( 'Unable to load sample cloud data. Get help.' );
+      console.log(status, data);
+    });
+  }
 	$scope.getCoverage = function( path, params ){
     //for ($i of [{u:$scope.cld_low,a:5}]){
-    var list = [{u:$scope.cld_low,a:40},{u:$scope.cld_med,a:50},
-          {u:$scope.cld_hig, a:150}];
+    //var list0 = [{u:$scope.cld_low1,a:40},{u:$scope.cld_med1,a:50},{u:$scope.cld_hig1, a:150}];
+    var list0 = [{u:$scope.cld_low1,a:40},{u:$scope.cld_hig1, a:150}];
+    var list1 = [{u:$scope.cld_low2,a:40},{u:$scope.cld_hig2, a:150}];
+    var list2 = [{u:$scope.cld_low3,a:40},{u:$scope.cld_hig3, a:150}];
+    var list3 = [{u:$scope.cld_low4,a:40},{u:$scope.cld_hig4, a:150}];
+    var sequence = [list0, list1, list2, list3];
 
-    $http.get(list[0].u, { responseType: "arraybuffer"}  ).
-    success(function(data, status, headers, config) {
-      //$scope.rawdata = Array.prototype.slice.call(new Float32Array(data));
-      var rawdata = Array.prototype.slice.call(new Float32Array(data));
-      $scope.buildWx( rawdata, $scope.dem_width, $scope.dem_height,
-       list[0].a, Number($scope.wx_mult) );
-    }).
-    error(function(data, status, headers, config) {
-      alert( 'Unable to load sample cloud data. Get help.' );
-      console.log(status, data);
-    });
-    $http.get(list[1].u, { responseType: "arraybuffer"}  ).
-    success(function(data, status, headers, config) {
-      //$scope.rawdata = Array.prototype.slice.call(new Float32Array(data));
-      var rawdata = Array.prototype.slice.call(new Float32Array(data));
-      $scope.buildWx( rawdata, $scope.dem_width, $scope.dem_height,
-       list[1].a, Number($scope.wx_mult) );
-    }).
-    error(function(data, status, headers, config) {
-      alert( 'Unable to load sample cloud data. Get help.' );
-      console.log(status, data);
-    });
-    $http.get(list[2].u, { responseType: "arraybuffer"}  ).
-    success(function(data, status, headers, config) {
-      //$scope.rawdata = Array.prototype.slice.call(new Float32Array(data));
-      var rawdata = Array.prototype.slice.call(new Float32Array(data));
-      $scope.buildWx( rawdata, $scope.dem_width, $scope.dem_height,
-       list[2].a, Number($scope.wx_mult) );
-    }).
-    error(function(data, status, headers, config) {
-      alert( 'Unable to load sample cloud data. Get help.' );
-      console.log(status, data);
-    });
+    $scope.wx_meshes = new Array(4);
+    var n = 0;
+    for( list of sequence){
+      $scope.wx_meshes[n] = new THREE.Object3D();
+      $scope.wx_mesh = $scope.wx_meshes[n++];
+      for( l of list ){
+        console.log('THIS?',l);
+        $scope.fetchBuild( l, $scope.wx_mesh );
+     }
+   }
+
+   $scope.wx_mesh = $scope.wx_meshes[0];
+   VIEW3D.container.add($scope.wx_mesh);
+   VIEW3D.animator = new $scope.myAnimator(1000);
 };
 
   /* = function( path, params ){
