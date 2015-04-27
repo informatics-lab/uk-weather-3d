@@ -17,7 +17,8 @@ var VIEW3D = {
     container : null,
     //water : null,
     directionalLight : null,
-    fps: 30,  // 30 is current Firefox max, as far as I can tell.
+    fps: 20,  // 30 is current Firefox max, as far as I can tell.
+    fpsMax: 20, 
     // Chrome will go up to 60 which gets GPU hot.
     clock : null,
     animator : null,
@@ -30,7 +31,7 @@ var VIEW3D = {
 	this.camera.lookAt(new THREE.Vector3(0, 0, 0));
 
 	this.controls = new THREE.TrackballControls(this.camera);
-	this.controls.addEventListener( 'change', function(){VIEW3D.fps=30;});
+	this.controls.addEventListener( 'change', function(){VIEW3D.fps=VIEW3D.fpsMax;});
 
 	this.renderer = new THREE.WebGLRenderer({alpha: true});
 	this.renderer.setSize(window.innerWidth, window.innerHeight);
@@ -93,7 +94,7 @@ var VIEW3D = {
 
 
   var aMeshMirror = new THREE.Mesh(
-           new THREE.PlaneGeometry(1000, 1000, 100, 100), shader_material
+           new THREE.PlaneGeometry(2000, 2000, 10, 10), shader_material
            );
 	aMeshMirror.rotation.x = - Math.PI * 0.5;
 
@@ -185,20 +186,44 @@ angular.module('viewer', []).controller("MainController", function($scope, $http
 	//$scope.demProviderUrl = "/dembin";
 	//$scope.wxProviderUrl = "/capbin";
 
-  $scope.cld_low1 = "/utils/cld_low1.bin";
-  $scope.cld_low2 = "/utils/cld_low2.bin";
-  $scope.cld_low3 = "/utils/cld_low3.bin";
-  $scope.cld_low4 = "/utils/cld_low4.bin";
-  $scope.cld_med1 = "/utils/cld_med1.bin";
-  $scope.cld_med2 = "/utils/cld_med2.bin";
-  $scope.cld_med3 = "/utils/cld_med3.bin";
-  $scope.cld_med4 = "/utils/cld_med4.bin";
-  $scope.cld_hig1 = "/utils/cld_hig1.bin";
-  $scope.cld_hig2 = "/utils/cld_hig2.bin";
-  $scope.cld_hig3 = "/utils/cld_hig3.bin";
-  $scope.cld_hig4 = "/utils/cld_hig4.bin";
+  $scope.cld_low0 = "/5min/low_000.bin";
+  $scope.cld_low1 = "/5min/low_001.bin";
+  $scope.cld_low2 = "/5min/low_002.bin";
+  $scope.cld_low3 = "/5min/low_003.bin";
+  $scope.cld_low4 = "/5min/low_004.bin";
+  $scope.cld_low5 = "/5min/low_005.bin";
+  $scope.cld_low6 = "/5min/low_006.bin";
+  $scope.cld_low7 = "/5min/low_007.bin";
+  $scope.cld_low8 = "/5min/low_008.bin";
+  $scope.cld_low9 = "/5min/low_009.bin";
+  $scope.cld_low10 = "/5min/low_010.bin";
+  $scope.cld_low11 = "/5min/low_011.bin";
+  $scope.cld_med0 = "/5min/med_000.bin";
+  $scope.cld_med1 = "/5min/med_001.bin";
+  $scope.cld_med2 = "/5min/med_002.bin";
+  $scope.cld_med3 = "/5min/med_003.bin";
+  $scope.cld_med4 = "/5min/med_004.bin";
+  $scope.cld_med5 = "/5min/med_005.bin";
+  $scope.cld_med6 = "/5min/med_006.bin";
+  $scope.cld_med7 = "/5min/med_007.bin";
+  $scope.cld_med8 = "/5min/med_008.bin";
+  $scope.cld_med9 = "/5min/med_009.bin";
+  $scope.cld_med10 = "/5min/med_010.bin";
+  $scope.cld_med11 = "/5min/med_011.bin";
+  $scope.cld_hig0 = "/5min/hig_000.bin";
+  $scope.cld_hig1 = "/5min/hig_001.bin";
+  $scope.cld_hig2 = "/5min/hig_002.bin";
+  $scope.cld_hig3 = "/5min/hig_003.bin";
+  $scope.cld_hig4 = "/5min/hig_004.bin";
+  $scope.cld_hig5 = "/5min/hig_005.bin";
+  $scope.cld_hig6 = "/5min/hig_006.bin";
+  $scope.cld_hig7 = "/5min/hig_007.bin";
+  $scope.cld_hig8 = "/5min/hig_008.bin";
+  $scope.cld_hig9 = "/5min/hig_009.bin";
+  $scope.cld_hig10 = "/5min/hig_010.bin";
+  $scope.cld_hig11 = "/5min/hig_011.bin";
 
-
+  $scope.last_frame = 11;
 
 	//$scope.bboxes = {"UK":"-14,47.5,7,61", "Exeter":"-4.93266,49.31965,-2.12066,52.13165"};
   $scope.bboxes = {"UK":"-12,50,3.5,59", "Exeter":"-4.93266,49.31965,-2.12066,52.13165"};
@@ -314,8 +339,8 @@ angular.module('viewer', []).controller("MainController", function($scope, $http
 	$scope.generateTexture = function(data, dem_width, dem_height ) {
 	    var palfn = $scope.DemPaletteFn();
 	    var canvas = document.createElement( 'canvas' );
-	    canvas.width = 400;
-	    canvas.height = 400;
+	    canvas.width = 200;
+	    canvas.height = 200;
 
 	    var context = canvas.getContext( '2d' );
 	    var image = context.getImageData( 0, 0, canvas.width, canvas.height );
@@ -371,8 +396,8 @@ angular.module('viewer', []).controller("MainController", function($scope, $http
 	$scope.generateCloudTexture = function(data, width, height) {
 	    var palfn = $scope.WxPaletteFn();
 	    var canvas = document.createElement( 'canvas' );
-	    canvas.width = 400;
-	    canvas.height = 400;
+	    canvas.width = 200;
+	    canvas.height = 200;
 
 	    var context = canvas.getContext( '2d' );
 	    var image = context.getImageData( 0, 0, canvas.width, canvas.height);
@@ -455,7 +480,7 @@ angular.module('viewer', []).controller("MainController", function($scope, $http
 		    map: texture, transparent: true, specular: 0x444444, shininess: 10 });
 	    // (tranparent = true) allows sea to be seen.  Perhaps sea level should be dropped.
 
-	    var geometry = new THREE.PlaneGeometry(1000, 1000, $scope.dem_width-1, $scope.dem_height-1);
+	    var geometry = new THREE.PlaneGeometry(2000, 2000, $scope.dem_width-1, $scope.dem_height-1);
 	    var scale_fac = 2000.0 /  ($scope.distns * 1000.0);
 	    for(i = 0; i < data.length; i++){
 		var ht = data[i];
@@ -496,10 +521,10 @@ angular.module('viewer', []).controller("MainController", function($scope, $http
                   {
                           this.currentDisplayTime -= this.tileDisplayDuration;
                           VIEW3D.container.remove( $scope.wx_mesh );
-                          console.log('SHOWING', $scope.frame)
+                          //console.log('SHOWING', $scope.frame, $scope.last_frame)
                           $scope.wx_mesh = $scope.wx_meshes[$scope.frame++]
                           VIEW3D.container.add( $scope.wx_mesh );
-                          if($scope.frame > 3){$scope.frame = 0;}
+                          if($scope.frame > $scope.last_frame){$scope.frame = 0;}
 /*
                           this.currentTile++;
                           if (this.currentTile == this.numberOfTiles)
@@ -526,7 +551,7 @@ angular.module('viewer', []).controller("MainController", function($scope, $http
 							specular: 0xffffff,
 							shininess: Number($scope.shininess) });
 
-	    var geometry = new THREE.PlaneGeometry(1000, 1000, width-1, height-1);
+	    var geometry = new THREE.PlaneGeometry(2000, 2000, width-1, height-1);
 	    var scale_fac = 1.0 / $scope.distns;
       console.log("BUILDING WITH", add);
 	    for(i = 0; i < data.length; i++){
@@ -587,38 +612,47 @@ angular.module('viewer', []).controller("MainController", function($scope, $http
   $scope.fetchBuild = function( item, dest ){
     $http.get(item.u, { responseType: "arraybuffer"}  ).
     success(function(data, status, headers, config) {
-      var rawdata = Array.prototype.slice.call(new Float32Array(data));
-      $scope.buildWx( dest, rawdata, $scope.dem_width, $scope.dem_height,
-       item.a, Number($scope.wx_mult) );
+      //var rawdata = Array.prototype.slice.call(new Float32Array(data));
+      var rawdata = Array.prototype.slice.call(new Int16Array(data));
+      //var rawdata = Array.prototype.slice.call(new Uint8Array(data));
+      //$scope.buildWx( dest, rawdata, $scope.dem_width, $scope.dem_height,
+      // item.a, Number($scope.wx_mult) ); 
+      // 186, 232
+      $scope.buildWx( dest, rawdata, 93, 116, item.a, Number($scope.wx_mult) );
     }).
     error(function(data, status, headers, config) {
       alert( 'Unable to load sample cloud data. Get help.' );
       console.log(status, data);
     });
-  }
-	$scope.getCoverage = function( path, params ){
-    //for ($i of [{u:$scope.cld_low,a:5}]){
-    //var list0 = [{u:$scope.cld_low1,a:40},{u:$scope.cld_med1,a:50},{u:$scope.cld_hig1, a:150}];
-    var list0 = [{u:$scope.cld_low1,a:40},{u:$scope.cld_hig1, a:150}];
-    var list1 = [{u:$scope.cld_low2,a:40},{u:$scope.cld_hig2, a:150}];
-    var list2 = [{u:$scope.cld_low3,a:40},{u:$scope.cld_hig3, a:150}];
-    var list3 = [{u:$scope.cld_low4,a:40},{u:$scope.cld_hig4, a:150}];
-    var sequence = [list0, list1, list2, list3];
+  };
+  $scope.getCoverage = function( path, params ){
+      var sequence = [[{u:$scope.cld_low0,a:40},{u:$scope.cld_med0,a:60},{u:$scope.cld_hig0, a:150}],
+	    [{u:$scope.cld_low1,a:40},{u:$scope.cld_med1,a:60},{u:$scope.cld_hig1, a:150}],
+	    [{u:$scope.cld_low2,a:40},{u:$scope.cld_med2,a:60},{u:$scope.cld_hig2, a:150}],
+	    [{u:$scope.cld_low3,a:40},{u:$scope.cld_med3,a:60},{u:$scope.cld_hig3, a:150}],
+	    [{u:$scope.cld_low4,a:40},{u:$scope.cld_med4,a:60},{u:$scope.cld_hig4, a:150}],
+	    [{u:$scope.cld_low5,a:40},{u:$scope.cld_med5,a:60},{u:$scope.cld_hig5, a:150}],
+	    [{u:$scope.cld_low6,a:40},{u:$scope.cld_med6,a:60},{u:$scope.cld_hig6, a:150}],
+	    [{u:$scope.cld_low7,a:40},{u:$scope.cld_med7,a:60},{u:$scope.cld_hig7, a:150}],
+	    [{u:$scope.cld_low8,a:40},{u:$scope.cld_med8,a:60},{u:$scope.cld_hig8, a:150}],
+	    [{u:$scope.cld_low9,a:40},{u:$scope.cld_med9,a:60},{u:$scope.cld_hig9, a:150}],
+	    [{u:$scope.cld_low10,a:40},{u:$scope.cld_med10,a:60},{u:$scope.cld_hig10, a:150}],
+            [{u:$scope.cld_low11,a:40},{u:$scope.cld_med11,a:60},{u:$scope.cld_hig11, a:150}]];
 
-    $scope.wx_meshes = new Array(4);
+
+    $scope.wx_meshes = new Array(sequence.length);
     var n = 0;
     for( list of sequence){
       $scope.wx_meshes[n] = new THREE.Object3D();
       $scope.wx_mesh = $scope.wx_meshes[n++];
       for( l of list ){
-        console.log('THIS?',l);
         $scope.fetchBuild( l, $scope.wx_mesh );
      }
    }
 
    $scope.wx_mesh = $scope.wx_meshes[0];
    VIEW3D.container.add($scope.wx_mesh);
-   VIEW3D.animator = new $scope.myAnimator(1000);
+   VIEW3D.animator = new $scope.myAnimator(500);
 };
 
   /* = function( path, params ){

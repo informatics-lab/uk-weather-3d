@@ -100,7 +100,7 @@ void main() {
     </script>
    <div ng-controller="MainController">
     <!-- <div ng-style="overlayStyle" class="overlay"></div> -->
-    <div ng-style="modalStyle" class="modal" ng-mouseenter="controlsActive(false)" ng-mouseleave="controlsActive(true)">
+    <div ng-style="modalStyle" class="ng-hide" class="modal" ng-mouseenter="controlsActive(false)" ng-mouseleave="controlsActive(true)">
       <div id="info">
         <button ng-click="rebuildWx()">reload wx</button><br>
 	<select ng-model="bboxChoice" ng-options="key for (key,value) in bboxes">
