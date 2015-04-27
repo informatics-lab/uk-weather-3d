@@ -93,7 +93,7 @@ var VIEW3D = {
 
 
   var aMeshMirror = new THREE.Mesh(
-           new THREE.PlaneGeometry(2000, 2000, 100, 100), shader_material
+           new THREE.PlaneGeometry(1000, 1000, 100, 100), shader_material
            );
 	aMeshMirror.rotation.x = - Math.PI * 0.5;
 
@@ -314,8 +314,8 @@ angular.module('viewer', []).controller("MainController", function($scope, $http
 	$scope.generateTexture = function(data, dem_width, dem_height ) {
 	    var palfn = $scope.DemPaletteFn();
 	    var canvas = document.createElement( 'canvas' );
-	    canvas.width = 600;
-	    canvas.height = 600;
+	    canvas.width = 400;
+	    canvas.height = 400;
 
 	    var context = canvas.getContext( '2d' );
 	    var image = context.getImageData( 0, 0, canvas.width, canvas.height );
@@ -371,8 +371,8 @@ angular.module('viewer', []).controller("MainController", function($scope, $http
 	$scope.generateCloudTexture = function(data, width, height) {
 	    var palfn = $scope.WxPaletteFn();
 	    var canvas = document.createElement( 'canvas' );
-	    canvas.width = 600;
-	    canvas.height = 600;
+	    canvas.width = 400;
+	    canvas.height = 400;
 
 	    var context = canvas.getContext( '2d' );
 	    var image = context.getImageData( 0, 0, canvas.width, canvas.height);
@@ -455,7 +455,7 @@ angular.module('viewer', []).controller("MainController", function($scope, $http
 		    map: texture, transparent: true, specular: 0x444444, shininess: 10 });
 	    // (tranparent = true) allows sea to be seen.  Perhaps sea level should be dropped.
 
-	    var geometry = new THREE.PlaneGeometry(2000, 2000, $scope.dem_width-1, $scope.dem_height-1);
+	    var geometry = new THREE.PlaneGeometry(1000, 1000, $scope.dem_width-1, $scope.dem_height-1);
 	    var scale_fac = 2000.0 /  ($scope.distns * 1000.0);
 	    for(i = 0; i < data.length; i++){
 		var ht = data[i];
@@ -526,7 +526,7 @@ angular.module('viewer', []).controller("MainController", function($scope, $http
 							specular: 0xffffff,
 							shininess: Number($scope.shininess) });
 
-	    var geometry = new THREE.PlaneGeometry(2000, 2000, width-1, height-1);
+	    var geometry = new THREE.PlaneGeometry(1000, 1000, width-1, height-1);
 	    var scale_fac = 1.0 / $scope.distns;
       console.log("BUILDING WITH", add);
 	    for(i = 0; i < data.length; i++){
