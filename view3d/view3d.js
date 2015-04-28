@@ -186,42 +186,44 @@ angular.module('viewer', []).controller("MainController", function($scope, $http
 	//$scope.demProviderUrl = "/dembin";
 	//$scope.wxProviderUrl = "/capbin";
 
-  $scope.cld_low0 = "/5min/low_000.bin";
-  $scope.cld_low1 = "/5min/low_001.bin";
-  $scope.cld_low2 = "/5min/low_002.bin";
-  $scope.cld_low3 = "/5min/low_003.bin";
-  $scope.cld_low4 = "/5min/low_004.bin";
-  $scope.cld_low5 = "/5min/low_005.bin";
-  $scope.cld_low6 = "/5min/low_006.bin";
-  $scope.cld_low7 = "/5min/low_007.bin";
-  $scope.cld_low8 = "/5min/low_008.bin";
-  $scope.cld_low9 = "/5min/low_009.bin";
-  $scope.cld_low10 = "/5min/low_010.bin";
-  $scope.cld_low11 = "/5min/low_011.bin";
-  $scope.cld_med0 = "/5min/med_000.bin";
-  $scope.cld_med1 = "/5min/med_001.bin";
-  $scope.cld_med2 = "/5min/med_002.bin";
-  $scope.cld_med3 = "/5min/med_003.bin";
-  $scope.cld_med4 = "/5min/med_004.bin";
-  $scope.cld_med5 = "/5min/med_005.bin";
-  $scope.cld_med6 = "/5min/med_006.bin";
-  $scope.cld_med7 = "/5min/med_007.bin";
-  $scope.cld_med8 = "/5min/med_008.bin";
-  $scope.cld_med9 = "/5min/med_009.bin";
-  $scope.cld_med10 = "/5min/med_010.bin";
-  $scope.cld_med11 = "/5min/med_011.bin";
-  $scope.cld_hig0 = "/5min/hig_000.bin";
-  $scope.cld_hig1 = "/5min/hig_001.bin";
-  $scope.cld_hig2 = "/5min/hig_002.bin";
-  $scope.cld_hig3 = "/5min/hig_003.bin";
-  $scope.cld_hig4 = "/5min/hig_004.bin";
-  $scope.cld_hig5 = "/5min/hig_005.bin";
-  $scope.cld_hig6 = "/5min/hig_006.bin";
-  $scope.cld_hig7 = "/5min/hig_007.bin";
-  $scope.cld_hig8 = "/5min/hig_008.bin";
-  $scope.cld_hig9 = "/5min/hig_009.bin";
-  $scope.cld_hig10 = "/5min/hig_010.bin";
-  $scope.cld_hig11 = "/5min/hig_011.bin";
+	//$scope.data_prefix = "/5min/";
+  $scope.data_prefix = "https://s3-eu-west-1.amazonaws.com/informatics-data/5min/";
+  $scope.cld_low0 = "low_000.bin";
+  $scope.cld_low1 = "low_001.bin";
+  $scope.cld_low2 = "low_002.bin";
+  $scope.cld_low3 = "low_003.bin";
+  $scope.cld_low4 = "low_004.bin";
+  $scope.cld_low5 = "low_005.bin";
+  $scope.cld_low6 = "low_006.bin";
+  $scope.cld_low7 = "low_007.bin";
+  $scope.cld_low8 = "low_008.bin";
+  $scope.cld_low9 = "low_009.bin";
+  $scope.cld_low10 = "low_010.bin";
+  $scope.cld_low11 = "low_011.bin";
+  $scope.cld_med0 = "med_000.bin";
+  $scope.cld_med1 = "med_001.bin";
+  $scope.cld_med2 = "med_002.bin";
+  $scope.cld_med3 = "med_003.bin";
+  $scope.cld_med4 = "med_004.bin";
+  $scope.cld_med5 = "med_005.bin";
+  $scope.cld_med6 = "med_006.bin";
+  $scope.cld_med7 = "med_007.bin";
+  $scope.cld_med8 = "med_008.bin";
+  $scope.cld_med9 = "med_009.bin";
+  $scope.cld_med10 = "med_010.bin";
+  $scope.cld_med11 = "med_011.bin";
+  $scope.cld_hig0 = "hig_000.bin";
+  $scope.cld_hig1 = "hig_001.bin";
+  $scope.cld_hig2 = "hig_002.bin";
+  $scope.cld_hig3 = "hig_003.bin";
+  $scope.cld_hig4 = "hig_004.bin";
+  $scope.cld_hig5 = "hig_005.bin";
+  $scope.cld_hig6 = "hig_006.bin";
+  $scope.cld_hig7 = "hig_007.bin";
+  $scope.cld_hig8 = "hig_008.bin";
+  $scope.cld_hig9 = "hig_009.bin";
+  $scope.cld_hig10 = "hig_010.bin";
+  $scope.cld_hig11 = "hig_011.bin";
 
   $scope.last_frame = 11;
 
@@ -610,7 +612,7 @@ angular.module('viewer', []).controller("MainController", function($scope, $http
 	};
 
   $scope.fetchBuild = function( item, dest ){
-    $http.get(item.u, { responseType: "arraybuffer"}  ).
+    $http.get($scope.data_prefix + item.u, { responseType: "arraybuffer"}  ).
     success(function(data, status, headers, config) {
       //var rawdata = Array.prototype.slice.call(new Float32Array(data));
       var rawdata = Array.prototype.slice.call(new Int16Array(data));
