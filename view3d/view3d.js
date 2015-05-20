@@ -30,9 +30,14 @@ var VIEW3D = {
 	this.controls = new THREE.TrackballControls(this.camera);
 	this.controls.addEventListener( 'change', function(){VIEW3D.fps=30;});
 
-	this.renderer = new THREE.WebGLRenderer({alpha: true});
+	//this.renderer = new THREE.WebGLRenderer({alpha: true});
+  this.mycanvas = document.createElement('canvas');
+  this.renderer = new THREE.WebGLRenderer({canvas: this.mycanvas,
+    preserveDrawingBuffer   : true,
+    alpha: true});
 	this.renderer.setSize(window.innerWidth, window.innerHeight);
 	this.renderer.setClearColor( 0x6666ff, 1);
+
 
 	this.directionalLight = new THREE.DirectionalLight(0xffffdd, 1);
 	//directionalLight.position.set(-600, 300, -600);
@@ -233,6 +238,11 @@ angular.module('viewer', []).controller("MainController", function($scope, $http
 	    //VIEW3D.container.remove( $scope.wx_mesh );
 	    //$scope.buildWx( $scope.rawdata, $scope.dem_width, $scope.dem_height );
 	}
+
+  $scope.saveCanvas = function() {
+    //console.log(VIEW3D.mycanvas);
+    window.open(VIEW3D.mycanvas.toDataURL('image/png'));
+  }
 
 	// If you'd rather not use the HTML5 canvas gradient trick, you can create
 	// palettes like this.
