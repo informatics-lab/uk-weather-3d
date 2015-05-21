@@ -12,7 +12,6 @@
     <script src="extras/xmlToJSON.js"> </script>
     <script src="extras/three.min.js"> </script>
     <script src="extras/controls/TrackballControls.js"></script>
-    <script src="extras/controls/DeviceOrientationController.js"></script>
     <script src="extras/libs/stats.min.js"></script>
     <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
     <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
@@ -23,12 +22,6 @@
 
   </head>
   <body ng-app="viewer">
-
-  <div>
-   <img src="https://dl.dropboxusercontent.com/u/2665124/volume_rendering_data/prototype.png" style="max-width: 15%; height: auto; position: absolute; bottom:1%; left: 1%">
-</div>
-
-
   <script id="fragment_shader0" type="x-shader/x-fragment">
     uniform float time;
     varying vec2 vUv;
@@ -109,7 +102,7 @@ void main() {
     </script>
    <div ng-controller="MainController">
     <!-- <div ng-style="overlayStyle" class="overlay"></div> -->
-    <div style="display:none;" ng-style="modalStyle" class="modal" ng-mouseenter="controlsActive(false)" ng-mouseleave="controlsActive(true)">
+    <div ng-style="modalStyle" class="modal" ng-mouseenter="controlsActive(false)" ng-mouseleave="controlsActive(true)">
       <div id="info">
         <button ng-click="rebuildWx()">reload wx</button><br>
 	<select ng-model="bboxChoice" ng-options="key for (key,value) in bboxes">
@@ -144,7 +137,6 @@ void main() {
       <div id="webgl"></div>
     </div>
   </div><!-- MainController -->
-  <script src="socket.js"></script>
   <script src="view3d.js"></script>
   <script>
 
