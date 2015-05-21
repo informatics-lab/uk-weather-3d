@@ -188,9 +188,9 @@ angular.module('viewer', []).controller("MainController", function($scope, $http
 	//$scope.demProviderUrl = "/dembin";
 	//$scope.wxProviderUrl = "/capbin";
 
-  $scope.cld_low = "/utils/cld_low.bin";
-  $scope.cld_med = "/utils/cld_med.bin";
-  $scope.cld_hig = "/utils/cld_hig.bin";
+  $scope.cld_low = "../utils/cld_low.bin";
+  $scope.cld_med = "../utils/cld_med.bin";
+  $scope.cld_hig = "../utils/cld_hig.bin";
 
 
 	//$scope.bboxes = {"UK":"-14,47.5,7,61", "Exeter":"-4.93266,49.31965,-2.12066,52.13165"};
