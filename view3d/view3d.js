@@ -522,7 +522,7 @@ angular.module('viewer', []).controller("MainController", function($scope, $http
 		  $scope.buildLand( $scope.demdata );
 	  }else{
 		  //$http.get($scope.demProviderUrl, {params:requestParams, responseType: "arraybuffer"}  ).
-      $http.get('/utils/dem.bin', {responseType: "arraybuffer"}).
+      $http.get('../utils/dem.bin', {responseType: "arraybuffer"}).
 		  success(function(data, status, headers, config) {
 			  $scope.demdata = Array.prototype.slice.call(new Int16Array(data));
 			  localStorage[storageName] = JSON.stringify($scope.demdata);
