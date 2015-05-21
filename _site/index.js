@@ -1,7 +1,6 @@
 var app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
-var rooms = [];
 
 app.get('*', function(req, res){
   res.sendFile(__dirname + req.url);
@@ -13,6 +12,7 @@ io.on('connection', function(socket){
     console.log('user ' + socket.id + ' disconnected');
   });
   socket.on('camera-pos', function(msg){
+    console.log(msg.x);
     io.emit('camera-pos', msg);
   });
   socket.on('camera-ang', function(msg){
@@ -38,12 +38,6 @@ io.on('connection', function(socket){
   });
   socket.on('reset', function(msg){
     io.emit('reset', msg);
-  });
-  socket.on('openroom', function(msg){
-    var newroom = Math.floor(Math.random()*90000) + 10000;
-    rooms.push(newroom);
-    console.log("Room " + newroom + " created.");
-    socket.emit('room', newroom);
   });
 });
 

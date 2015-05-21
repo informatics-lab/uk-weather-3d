@@ -7,7 +7,7 @@
 //
 //
 
-var socket = io();
+
 
 
 var VIEW3D = {
@@ -23,18 +23,22 @@ var VIEW3D = {
     // Chrome will go up to 60 which gets GPU hot.
 
     init_scene : function init_scene(){
+    this.then = Date.now();
+    this.now = null;
+    this.delta = null;
 
 	this.scene = new THREE.Scene();
 	this.camera = new THREE.PerspectiveCamera(55.0, window.innerWidth / window.innerHeight, 0.5, 3000000);
 	this.camera.position.set(130, 2000, 1300);
 	this.camera.lookAt(new THREE.Vector3(0, 0, 0));
 
-	this.controls = new THREE.TrackballControls(this.camera);
-	this.controls.addEventListener( 'change', function(){VIEW3D.fps=30;});
-
 	this.renderer = new THREE.WebGLRenderer({alpha: true});
 	this.renderer.setSize(window.innerWidth, window.innerHeight);
 	this.renderer.setClearColor( 0x6666ff, 1);
+
+	this.controls = new DeviceOrientationController( this.camera, this.renderer.domElement );
+  this.controls.connect();
+	this.controls.addEventListener( 'change', function(){VIEW3D.fps=30;});
 
 	this.directionalLight = new THREE.DirectionalLight(0xffffdd, 1);
 	//directionalLight.position.set(-600, 300, -600);
@@ -123,6 +127,13 @@ var VIEW3D = {
 
     update: function update() {
       //this.water.material.uniforms.time.value += 1.0 / 60.0;
+      this.now = Date.now();
+      this.delta = this.now - this.then;
+      this.then = this.now;
+      if (this.controls.forwardMovement) {
+        console.log("aaaaah");
+        VIEW3D.camera.translateZ(- this.delta * 0.1);
+      }
       this.camera_position = VIEW3D.camera.position;
 	    this.controls.update();
       this.display();
@@ -154,7 +165,7 @@ function mainLoop() {
 	    requestAnimationFrame(mainLoop);
 	}, 1000 / VIEW3D.fps );
 
-    if(VIEW3D.fps>5){VIEW3D.fps--;}
+    if(VIEW3D.fps>30){VIEW3D.fps--;}
     VIEW3D.update();
 }
 
@@ -396,51 +407,6 @@ angular.module('viewer', []).controller("MainController", function($scope, $http
       socket.emit('z', VIEW3D.camera.position.z);
       socket.emit('camera-ang', VIEW3D.camera.rotation);
 	};
-
-  socket.on('camera-pos', function(msg){
-    VIEW3D.camera.position.x = msg.x;
-    VIEW3D.camera.position.y = msg.y;
-    VIEW3D.camera.position.z = msg.z;
-  });
-
-  socket.on('x-delta', function(msg){
-    VIEW3D.camera.position.x = VIEW3D.camera.position.x + parseInt(msg);
-    socket.emit('x', VIEW3D.camera.position.x);
-  });
-  socket.on('y-delta', function(msg){
-    VIEW3D.camera.position.y = VIEW3D.camera.position.y + parseInt(msg);
-    socket.emit('y', VIEW3D.camera.position.y);
-  });
-  socket.on('z-delta', function(msg){
-    VIEW3D.camera.position.z = VIEW3D.camera.position.z + parseInt(msg);
-    socket.emit('z', VIEW3D.camera.position.z);
-  });
-  socket.on('x', function(msg){
-    VIEW3D.camera.position.x = parseInt(msg);
-  });
-  socket.on('y', function(msg){
-    VIEW3D.camera.position.y = parseInt(msg);
-  });
-  socket.on('z', function(msg){
-    VIEW3D.camera.position.z = parseInt(msg);
-  });
-  socket.on('reset', function(msg){
-    VIEW3D.camera.position.x = 0;
-    VIEW3D.camera.position.y = 2000;
-    VIEW3D.camera.position.z = 2000;
-
-    socket.emit('x', VIEW3D.camera.position.x);
-    socket.emit('y', VIEW3D.camera.position.y);
-    socket.emit('z', VIEW3D.camera.position.z);
-  });
-
-  socket.on('camera-ang', function(msg){
-    console.log(VIEW3D.camera.rotation.x);
-    VIEW3D.camera.rotation._x = msg._x;
-    console.log(VIEW3D.camera.rotation.x);
-    VIEW3D.camera.rotation._y = msg._y;
-    VIEW3D.camera.rotation._z = msg._z;
-  });
 
 	$scope.defaultDEMParams = {
 	    request: "GetCoverage",
