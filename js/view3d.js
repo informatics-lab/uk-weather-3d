@@ -24,23 +24,23 @@ var VIEW3D = {
   this.now = null;
   this.delta = null;
 
-	this.scene = new THREE.Scene();
-	this.camera = new THREE.PerspectiveCamera(55.0, window.innerWidth / window.innerHeight, 0.5, 3000000);
-	this.camera.position.set(130, 2000, 1300);
-	this.camera.lookAt(new THREE.Vector3(0, 0, 0));
+  this.scene = new THREE.Scene();
+  this.camera = new THREE.PerspectiveCamera(55.0, window.innerWidth / window.innerHeight, 0.5, 3000000);
+  this.camera.position.set(130, 2000, 1300);
+  this.camera.lookAt(new THREE.Vector3(0, 0, 0));
 
-	this.renderer = new THREE.WebGLRenderer({alpha: true});
-	this.renderer.setSize(window.innerWidth, window.innerHeight);
-	this.renderer.setClearColor( 0x6666ff, 1);
+  this.renderer = new THREE.WebGLRenderer({alpha: true});
+  this.renderer.setSize(window.innerWidth, window.innerHeight);
+  this.renderer.setClearColor( 0x6666ff, 1);
 
-	this.controls = new DeviceOrientationController( this.camera, this.renderer.domElement );
+  this.controls = new DeviceOrientationController( this.camera, this.renderer.domElement );
   this.controls.connect();
-	this.controls.addEventListener( 'change', function(){VIEW3D.fps=30;});
+  this.controls.addEventListener( 'change', function(){VIEW3D.fps=30;});
 
-	this.directionalLight = new THREE.DirectionalLight(0xffffdd, 1);
-	//directionalLight.position.set(-600, 300, -600);
-	this.directionalLight.position.set(200, 800, 1500);
-	this.scene.add(this.directionalLight);
+  this.directionalLight = new THREE.DirectionalLight(0xffffdd, 1);
+  //directionalLight.position.set(-600, 300, -600);
+  this.directionalLight.position.set(200, 800, 1500);
+  this.scene.add(this.directionalLight);
 
   // see http://www.html5rocks.com/en/tutorials/webgl/shaders/
 
@@ -63,15 +63,15 @@ var VIEW3D = {
   var aMeshMirror = new THREE.Mesh(
            new THREE.PlaneGeometry(2000, 2000, 100, 100), shader_material
            );
-	aMeshMirror.rotation.x = - Math.PI * 0.5;
+  aMeshMirror.rotation.x = - Math.PI * 0.5;
 
   aMeshMirror.castShadow = false;
   aMeshMirror.receiveShadow = true;
 
-	this.scene.add(aMeshMirror);
+  this.scene.add(aMeshMirror);
 
-	this.container = new THREE.Object3D();
-	this.scene.add(this.container);
+  this.container = new THREE.Object3D();
+  this.scene.add(this.container);
     },
 
 
