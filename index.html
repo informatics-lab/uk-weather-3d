@@ -1,66 +1,54 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
-    <meta charset='utf-8'>
-    <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <meta name="description" content="Uk-weather-3d : Experimental UK weather forecast viewer using threejs and modified WCS server">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>3D viewer</title>
 
-    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+    <link href="css/view3d.css" rel="stylesheet">
 
-    <title>Uk-weather-3d</title>
   </head>
+  <body ng-app="viewer">
 
-  <body>
+    <!-- Informatics prototype badge -->
+    <informatics-badge></informatics-badge>
 
-    <!-- HEADER -->
-    <div id="header_wrap" class="outer">
-        <header class="inner">
-          <a id="forkme_banner" href="https://github.com/msaunby/uk-weather-3d">View on GitHub</a>
+    <div ng-controller="MainController">
 
-          <h1 id="project_title">Uk-weather-3d</h1>
-          <h2 id="project_tagline">Experimental UK weather forecast viewer using threejs and modified WCS server</h2>
+      <!-- Stats modal -->
+      <div ng-include="includes/stats.html"></div>
 
-            <section id="downloads">
-              <a class="zip_download_link" href="https://github.com/msaunby/uk-weather-3d/zipball/master">Download this project as a .zip file</a>
-              <a class="tar_download_link" href="https://github.com/msaunby/uk-weather-3d/tarball/master">Download this project as a tar.gz file</a>
-            </section>
-        </header>
-    </div>
+      <div class="content">
+        <div id="webgl"></div>
+      </div>
 
-    <!-- MAIN CONTENT -->
-    <div id="main_content_wrap" class="outer">
-      <section id="main_content" class="inner">
-        <h3>
-	  <a id="try-it-now" class="anchor" href="#try-it-now" aria-hidden="true"><span class="octicon octicon-link"></span></a>Try it now.</h3>
+    </div><!-- MainController -->
 
-<p>This work in progress is an experiment in web based 3D display of high spatial resolution (approx 1km at highest res) UK weather forecasts.</p>
-<p>The links here can be used to see some examples (if everything is working well).  Note this IS NOT IN ANY WAY AN OPERATIONAL, OR EVEN USABLE, SERVICE.  IT'S AN EXPERIMENT.</p>
+    <!-- 3rd party libraries (from bower) -->
+    <script src="lib/angularjs/angular.js"></script>
+    <script src="lib/informatics-badge-directive/informatics-badge.js"></script>
+    <script src="lib/three.js/three.min.js"> </script>
+    <script src="lib/stats.js/stats.min.js"></script>
+    <script src="lib/jquery/jquery.js"></script>
 
-<pre><a href="view3d/#/?COVERAGE=UKPPBEST_Medium_cloud_cover&ELEVATION=1500-4500m&model=UKPPBEST">view3d - UKPPBEST_Medium_cloud_cover</a></pre>
- 
+    <!-- Custom/imported libraries -->
+    <script src="js/utils/xmlToJSON.js"> </script>
+    <script src="js/utils/latlon.js"></script>
 
-<h3>
-<a id="authors-and-contributors" class="anchor" href="#authors-and-contributors" aria-hidden="true"><span class="octicon octicon-link"></span></a>Authors and Contributors</h3>
+    <!-- Camera controllers -->
+    <script src="js/controls/TrackballControls.js"></script>
+    <script src="js/controls/DeviceOrientationController.js"></script>
 
-Visit the repo.
+    <!-- Shaders -->
+    <script src="js/shaders/fragment_shader0.js" id="fragment_shader0" type="x-shader/x-fragment"></script>
+    <script src="js/shaders/fragment_shader1.js" id="fragment_shader1" type="x-shader/x-fragment"></script>
+    <script src="js/shaders/vertexShader0.js" id="vertexShader0" type="x-shader/x-vertex"></script>
+    <script src="js/shaders/vertexShader1.js" id="vertexShader1" type="x-shader/x-vertex"></script>
 
-<h3>
-<a id="support-or-contact" class="anchor" href="#support-or-contact" aria-hidden="true"><span class="octicon octicon-link"></span></a>Support or Contact</h3>
-
-Visit the repo.
-
-      </section>
-    </div>
-
-    <!-- FOOTER  -->
-    <div id="footer_wrap" class="outer">
-      <footer class="inner">
-        <p class="copyright">Uk-weather-3d maintained by <a href="https://github.com/msaunby">msaunby</a></p>
-        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
-      </footer>
-    </div>
-
-    
+    <!-- Our code -->
+    <script src="js/view3d.js"></script>
+    <script src="js/viewer.controller.js"></script>
 
   </body>
 </html>

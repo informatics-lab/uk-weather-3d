@@ -1,0 +1,27 @@
+<!-- <div ng-style="overlayStyle" class="overlay"></div> -->
+<div style="display:none;" ng-style="modalStyle" class="modal" ng-mouseenter="controlsActive(false)" ng-mouseleave="controlsActive(true)">
+  <div id="info">
+    <button ng-click="rebuildWx()">reload wx</button><br>
+    <select ng-model="bboxChoice" ng-options="key for (key,value) in bboxes">
+            <option value="">-- choose bbox --</option>
+    </select>
+    <br>
+    Colour 0 <input type="text" ng-model="paletteColour0"></input><br>
+    Colour 1 <input type="text" ng-model="paletteColour1"></input><br>
+    Shiny <input type="text" ng-model="shininess"></input><br>
+    <form name="hh">
+    light posn <br>
+    X <input type="text" ng-model="light_x"></input><br>
+    Y <input type="text" ng-model="light_y"></input><br>
+    Z <input type="text" ng-model="light_z"></input><br>
+    camera posn <br>
+    X <input type="text" ng-model="camera_x"></input><br>
+    Y <input type="text" ng-model="camera_y"></input><br>
+    Z <input type="text" ng-model="camera_z"></input><br>
+    WX <br>
+    mult <input type="text" ng-model="wx_mult"></input><br>
+    <!-- Wx  add <input type="text" ng-model="wx_add"></input><br> -->
+    </form>
+    <ul><li ng-repeat="(key, value) in coverage">{{key}} : {{value}}</li></ul>
+  </div><!-- info -->
+</div><!-- modal -->
