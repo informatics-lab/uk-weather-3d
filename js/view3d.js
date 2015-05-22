@@ -170,7 +170,7 @@ function mainLoop() {
 }
 
 
-angular.module('viewer', []).controller("MainController", function($scope, $http, $location){
+angular.module('viewer', ["informatics-badge-directive"]).controller("MainController", function($scope, $http, $location){
 
 	$scope.dem_width = 256;
 	$scope.dem_height = 256;
