@@ -13,6 +13,7 @@
 var VIEW3D = {
 
     scene : null,
+    effect: null,
     camera : null,
     controls : null,
     renderer : null,
@@ -37,13 +38,17 @@ var VIEW3D = {
 	this.renderer.setClearColor( 0x6666ff, 1);
 
 	this.controls = new DeviceOrientationController( this.camera, this.renderer.domElement );
-  this.controls.connect();
+  	this.controls.connect();
 	this.controls.addEventListener( 'change', function(){VIEW3D.fps=30;});
 
 	this.directionalLight = new THREE.DirectionalLight(0xffffdd, 1);
 	//directionalLight.position.set(-600, 300, -600);
 	this.directionalLight.position.set(200, 800, 1500);
 	this.scene.add(this.directionalLight);
+
+	this.effect = new THREE.StereoEffect( this.renderer );
+	this.effect.eyeSeparation = 10;
+	this.effect.setSize(window.innerWidth, window.innerHeight);
 
 	/*
 	var waterNormals = new THREE.ImageUtils.loadTexture('waternormals.jpg');
@@ -119,7 +124,8 @@ var VIEW3D = {
 
     display: function display() {
       //this.water.render();
-      this.renderer.render(this.scene, this.camera);
+      // this.renderer.render(this.scene, this.camera);
+      this.effect.render( this.scene, this.camera );
       if(stats){
         stats.update();
       }
