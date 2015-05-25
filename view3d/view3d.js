@@ -255,10 +255,13 @@ angular.module('viewer', []).controller("MainController", function($scope, $http
   }
 
   $scope.setCamera = function(n) {
-    console.log('camera', n);
+    console.log('camera', VIEW3D.camera);
+    VIEW3D.controls.reset();
+    VIEW3D.camera.position.set(0, 2000, 2000);
   }
-	// If you'd rather not use the HTML5 canvas gradient trick, you can create
-	// palettes like this.
+
+	// If you'd rather not use the followimg HTML5 canvas gradient trick,
+  // you can create palettes like this.
 	/*
 	$scope.paletteFn = function( v ){
 	    var rgba = {'r':0,'g':0,'b':0,'a':0};
