@@ -240,10 +240,23 @@ angular.module('viewer', []).controller("MainController", function($scope, $http
 	}
 
   $scope.saveCanvas = function() {
-    //console.log(VIEW3D.mycanvas);
-    window.open(VIEW3D.mycanvas.toDataURL('image/png'));
+    var tmpcanv = document.createElement('canvas');
+    var src_aspect = VIEW3D.mycanvas.width / VIEW3D.mycanvas.height;
+    tmpcanv.width = 128;
+    tmpcanv.height = 128;
+    max_x = tmpcanv.height * src_aspect;
+    min_x = (tmpcanv.width - max_x) * 0.5;
+    max_y = tmpcanv.height;
+    min_y = 0;
+    tmpcanv.getContext('2d').drawImage(VIEW3D.mycanvas, min_x, min_y, max_x, max_y);
+    //window.open(tmpcanv.toDataURL('image/png'));
+    $scope.thumb0=tmpcanv.toDataURL('image/png');
+
   }
 
+  $scope.setCamera = function(n) {
+    console.log('camera', n);
+  }
 	// If you'd rather not use the HTML5 canvas gradient trick, you can create
 	// palettes like this.
 	/*

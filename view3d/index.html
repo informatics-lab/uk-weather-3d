@@ -131,6 +131,9 @@ void main() {
         </form>
         <ul><li ng-repeat="(key, value) in coverage">{{key}} : {{value}}</li></ul>
       </div><!-- info -->
+      <a href="" ng-click="setCamera(0)">
+        <img ng-src="{{thumb0}}" style="width:128px;height:128px;"></img>
+      </a>
     </div><!-- modal -->
     <div class="content">
       <div id="webgl"></div>
