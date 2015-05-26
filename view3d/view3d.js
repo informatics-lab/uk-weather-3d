@@ -59,7 +59,7 @@ var VIEW3D = {
 
 
       var aMeshMirror = new THREE.Mesh(
-        new THREE.PlaneGeometry(2000, 2000, 100, 100), shader_material
+        new THREE.PlaneBufferGeometry(2000, 2000, 100, 100), shader_material
       );
       aMeshMirror.rotation.x = - Math.PI * 0.5;
 
@@ -127,15 +127,17 @@ var VIEW3D = {
     $scope.position = null; // camera position
 
     // The OpenShift application allows cross origin requests (for now).
-    $scope.demProviderUrl = "http://python-wetoffice.rhcloud.com/dembin";
-    $scope.wxProviderUrl = "http://python-wetoffice.rhcloud.com/capbin";
+    //$scope.demProviderUrl = "http://python-wetoffice.rhcloud.com/dembin";
+    //$scope.wxProviderUrl = "http://python-wetoffice.rhcloud.com/capbin";
     // To use your own (local) server for data replace with these -
     //$scope.demProviderUrl = "/dembin";
     //$scope.wxProviderUrl = "/capbin";
 
-    $scope.cld_low = "/utils/cld_low.bin";
-    $scope.cld_med = "/utils/cld_med.bin";
-    $scope.cld_hig = "/utils/cld_hig.bin";
+    $scope.cld_low = "cld_low.bin";
+    $scope.cld_med = "cld_med.bin";
+    $scope.cld_hig = "cld_hig.bin";
+
+    $scope.data_prefix = "/utils/";
 
 
     //$scope.bboxes = {"UK":"-14,47.5,7,61", "Exeter":"-4.93266,49.31965,-2.12066,52.13165"};
@@ -419,8 +421,10 @@ $scope.buildLand = function( data ){
       if(ht < 0){ht = 0;}
       geometry.vertices[i].z = (ht * 10.0 * scale_fac) + 5.0;
     }
-
-    var mesh = new THREE.Mesh(geometry, material);
+    var bufferGeometry = new THREE.BufferGeometry();
+    bufferGeometry.fromGeometry( geometry );
+    geometry = null;
+    var mesh = new THREE.Mesh(bufferGeometry, material);
     mesh.castShadow = false;
     mesh.receiveShadow = true;
     mesh.position.z = 0;
@@ -429,8 +433,7 @@ $scope.buildLand = function( data ){
     VIEW3D.container.add(mesh);
   };
 
-
-  $scope.buildWx = function( data, width, height, add, mult ){
+  $scope.buildWx = function( dest, data, width, height, add, mult ){
     var texture = new THREE.Texture( $scope.generateCloudTexture(data, width, height) );
     texture.needsUpdate = true;
     var material = new THREE.MeshPhongMaterial({side: THREE.DoubleSide,
@@ -444,13 +447,15 @@ $scope.buildLand = function( data ){
       for(i = 0; i < data.length; i++){
         geometry.vertices[i].z = (data[i] * mult * scale_fac) + add;
       }
-      var mesh = new THREE.Mesh(geometry, material);
+      var bufferGeometry = new THREE.BufferGeometry();
+      bufferGeometry.fromGeometry( geometry );
+      geometry = null;
+      var mesh = new THREE.Mesh(bufferGeometry, material);
       mesh.castShadow = true;
       mesh.receiveShadow = true;
       mesh.position.z = 0;
       mesh.rotation.x = - Math.PI * 0.5;
-      //$scope.wx_mesh = mesh;
-      VIEW3D.container.add(mesh);
+      dest.add(mesh);
     };
 
     $scope.getDEM = function( path, params ){
@@ -496,60 +501,29 @@ $scope.buildLand = function( data ){
       }
     };
 
-    $scope.getCoverage = function( path, params ){
-      //for ($i of [{u:$scope.cld_low,a:5}]){
-      var list = [{u:$scope.cld_low,a:40},{u:$scope.cld_med,a:50},
-        {u:$scope.cld_hig, a:150}];
-
-        $http.get(list[0].u, { responseType: "arraybuffer"}  ).
-        success(function(data, status, headers, config) {
-          //$scope.rawdata = Array.prototype.slice.call(new Float32Array(data));
-          var rawdata = Array.prototype.slice.call(new Float32Array(data));
-          $scope.buildWx( rawdata, $scope.dem_width, $scope.dem_height,
-            list[0].a, Number($scope.wx_mult) );
-          }).
-          error(function(data, status, headers, config) {
-            alert( 'Unable to load sample cloud data. Get help.' );
-            console.log(status, data);
-          });
-          $http.get(list[1].u, { responseType: "arraybuffer"}  ).
-          success(function(data, status, headers, config) {
-            //$scope.rawdata = Array.prototype.slice.call(new Float32Array(data));
-            var rawdata = Array.prototype.slice.call(new Float32Array(data));
-            $scope.buildWx( rawdata, $scope.dem_width, $scope.dem_height,
-              list[1].a, Number($scope.wx_mult) );
-            }).
-            error(function(data, status, headers, config) {
-              alert( 'Unable to load sample cloud data. Get help.' );
-              console.log(status, data);
-            });
-            $http.get(list[2].u, { responseType: "arraybuffer"}  ).
-            success(function(data, status, headers, config) {
-              //$scope.rawdata = Array.prototype.slice.call(new Float32Array(data));
-              var rawdata = Array.prototype.slice.call(new Float32Array(data));
-              $scope.buildWx( rawdata, $scope.dem_width, $scope.dem_height,
-                list[2].a, Number($scope.wx_mult) );
-              }).
-              error(function(data, status, headers, config) {
-                alert( 'Unable to load sample cloud data. Get help.' );
-                console.log(status, data);
-              });
-            };
-
-            /* = function( path, params ){
-            var requestParams = angular.copy( $scope.defaultWxParams );
-            for( k in params ){
-            requestParams[k] = params[k];
-          }
-          $http.get($scope.wxProviderUrl, {params:requestParams, responseType: "arraybuffer"}  ).
-          success(function(data, status, headers, config) {
-          $scope.rawdata = Array.prototype.slice.call(new Float32Array(data));
-          $scope.buildWx( $scope.rawdata, $scope.dem_width, $scope.dem_height );
-        }).
-        error(function(data, status, headers, config) {
-        alert( 'Unable to load weather data. Check your selection and try again.' );
+    $scope.fetchBuild = function( item, dest ){
+      $http.get($scope.data_prefix + item.u, { responseType: "arraybuffer"}  ).
+      success(function(data, status, headers, config) {
+        var rawdata = Array.prototype.slice.call(new Float32Array(data));
+        //var rawdata = Array.prototype.slice.call(new Int16Array(data));
+        //var rawdata = Array.prototype.slice.call(new Uint8Array(data));
+        $scope.buildWx( dest, rawdata, $scope.dem_width, $scope.dem_height, item.a, Number($scope.wx_mult) );
+      }).
+      error(function(data, status, headers, config) {
+        alert( 'Unable to load sample cloud data. Get help.' );
         console.log(status, data);
       });
     };
-    */
-  });
+
+    $scope.getCoverage = function( path, params ){
+      $scope.wx_mesh = new THREE.Object3D();
+      VIEW3D.container.add( $scope.wx_mesh );
+      var list = [{u:$scope.cld_low,a:40},{u:$scope.cld_med,a:50},
+        {u:$scope.cld_hig, a:150}];
+        for( l of list ){
+          $scope.fetchBuild( l, $scope.wx_mesh );
+        }
+      };
+      //};
+
+    });
