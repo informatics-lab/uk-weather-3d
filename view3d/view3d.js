@@ -94,25 +94,25 @@ var VIEW3D = {
       this.renderer.setSize(inWidth, inHeight);
       this.canvas.html(this.renderer.domElement);
       this.display();
+    },
+
+    mainLoop: function() {
+      // Left to run at max speed I get almost 60fps on a Macbook Pro.
+      // Which will cause the fan to come on and drain the battery.
+      // The timeout sets the max frame rate.  1000/5 gives 5fps.
+      // fps is increased when the controls are moved.  Gives a much
+      // smoother experience.
+      setTimeout( function() {
+        requestAnimationFrame(VIEW3D.mainLoop);
+      }, 1000 / this.fps );
+
+      if(this.fps>5){this.fps--;}
+      VIEW3D.update();
     }
+
   };
 
   VIEW3D.init_scene();
-
-
-  function mainLoop() {
-    // Left to run at max speed I get almost 60fps on a Macbook Pro.
-    // Which will cause the fan to come on and drain the battery.
-    // The timeout sets the max frame rate.  1000/5 gives 5fps.
-    // fps is increased when the controls are moved.  Gives a much
-    // smoother experience.
-    setTimeout( function() {
-      requestAnimationFrame(mainLoop);
-    }, 1000 / VIEW3D.fps );
-
-    if(VIEW3D.fps>5){VIEW3D.fps--;}
-    VIEW3D.update();
-  }
 
 
   angular.module('viewer', []).controller("MainController", function($scope, $http, $location){
