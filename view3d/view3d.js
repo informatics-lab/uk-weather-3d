@@ -531,14 +531,57 @@ $scope.buildLand = function( data ){
     };
 
     $scope.getCoverage = function( path, params ){
+
       $scope.wx_mesh = new THREE.Object3D();
+
+      // get 70 level png
+      var imageObj = new Image()
+      var ptcldcanv  = document.createElement( 'canvas' )
+      imageObj.onload = function(){
+        ptcldcanv.width = imageObj.width
+        ptcldcanv.height = imageObj.height
+        var context = ptcldcanv.getContext( '2d' )
+        context.drawImage( imageObj, 0, 0 )
+        console.log("HAZ DATA " + ptcldcanv.width)
+        var x_0 = 0
+        var y_0 = ptcldcanv.height - 812
+        var slicecanv = document.createElement('canvas')
+        slicecanv.width = $scope.dem_width
+        slicecanv.height = $scope.dem_height
+        slicecanv.getContext('2d').drawImage(ptcldcanv,
+          x_0, y_0, 623, 812,
+          0, 0, slicecanv.width, slicecanv.height)
+        var ctx = slicecanv.getContext('2d')
+        var pixels = ctx.getImageData(0,0,slicecanv.width,slicecanv.height)
+        var floatdata = new Float32Array(pixels.data.length/4)
+        for(var i=0; i<pixels.data.length; i += 4){
+          pixels.data[i+1] = pixels.data[i+0]
+          pixels.data[i+2] = pixels.data[i+0]
+          floatdata[i/4] =  (100.0/255.0) * pixels.data[i+0]
+        }
+        ctx.putImageData( pixels, 0, 0 );
+        //var picurl = slicecanv.toDataURL('image/png')
+        //open( picurl )
+        //var buffer = new ArrayBuffer(pixels.data.length)
+        var rawdata = Array.prototype.slice.call(floatdata)
+        $scope.buildWx( $scope.wx_mesh, rawdata, slicecanv.width, slicecanv.height,
+          20, Number($scope.wx_mult) )
+          $scope.saveCanvas()
+
+      }
+      imageObj.src = '/utils/datashadows.png'
+
+
+
+      VIEW3D.container.add( $scope.wx_mesh )
+
+      /*
       VIEW3D.container.add( $scope.wx_mesh );
       var list = [{u:$scope.cld_low,a:40},{u:$scope.cld_med,a:50},
         {u:$scope.cld_hig, a:150}];
         for( l of list ){
           $scope.fetchBuild( l, $scope.wx_mesh,function(){$scope.saveCanvas();});
         }
-      };
-      //};
-
+      */
+      }
     });
