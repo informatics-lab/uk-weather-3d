@@ -14,6 +14,6 @@ curl "${WCS}${MED}" > cld_med.bin
 echo "Fetching high cloud"
 echo "${WCS}${HIG}"
 curl "${WCS}${HIG}" > cld_hig.bin
-echo "Fetching DEM"
-echo "${DEM}"
-curl "${DEM}" > dem.bin
+#echo "Fetching DEM"
+#echo "${DEM}"
+#curl "${DEM}" > dem.bin

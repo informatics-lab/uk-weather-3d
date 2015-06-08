@@ -29,15 +29,12 @@
         <select ng-model="bboxChoice" ng-options="key for (key,value) in bboxes">
           <option value="">-- choose bbox --</option>
         </select>
+        <!--
         <br>
         Colour 0 <input type="text" ng-model="paletteColour0"></input><br>
         Colour 1 <input type="text" ng-model="paletteColour1"></input><br>
         Shiny <input type="text" ng-model="shininess"></input><br>
-        <!--
-        <pre> {{position}} </pre>
-        <pre> {{distns}} </pre>
-        <pre> {{distew}} </pre>
-      -->
+
       <form name="hh">
         light posn <br>
         X <input type="text" ng-model="light_x"></input><br>
@@ -49,12 +46,13 @@
         Z <input type="text" ng-model="camera_z"></input><br>
         WX <br>
         mult <input type="text" ng-model="wx_mult"></input><br>
-        <!-- Wx  add <input type="text" ng-model="wx_add"></input><br> -->
       </form>
-      <ul><li ng-repeat="(key, value) in coverage">{{key}} : {{value}}</li></ul>
+    -->
     </div><!-- info -->
     <a href="" ng-click="setCamera(0)">
+      <button style="width:132px;height:132px;padding:0px;border-radius:10px">
       <img ng-src="{{thumb0}}" style="width:128px;height:128px;"></img>
+    </button>
     </a>
   </div><!-- modal -->
   <div class="content">

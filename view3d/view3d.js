@@ -124,6 +124,7 @@ var VIEW3D = {
     //
     // Issuing localStorage.clear() in console is useful too :-)
 
+    $scope.landCanvas = null;
     $scope.position = null; // camera position
 
     // The OpenShift application allows cross origin requests (for now).
@@ -332,7 +333,6 @@ $scope.generateCloudTexture = function(data, width, height) {
   var canvas = document.createElement( 'canvas' );
   canvas.width = 600;
   canvas.height = 600;
-
   var context = canvas.getContext( '2d' );
   var image = context.getImageData( 0, 0, canvas.width, canvas.height);
 
@@ -408,7 +408,9 @@ $scope.$watch('location.search()', function(){
 
 
 $scope.buildLand = function( data ){
-  var texture = new THREE.Texture( $scope.generateTexture(data, $scope.dem_width, $scope.dem_height) );
+  $scope.landCanvas
+  var texture = new THREE.Texture( $scope.landCanvas );
+  //var texture = new THREE.Texture( $scope.generateTexture(data, $scope.dem_width, $scope.dem_height) );
   texture.needsUpdate = true;
   var material = new THREE.MeshPhongMaterial({
     map: texture, transparent: true, specular: 0x444444, shininess: 10 });
@@ -479,6 +481,18 @@ $scope.buildLand = function( data ){
       $scope.distns = nmid.distanceTo(smid);
       $scope.distew = wmid.distanceTo(emid);
 
+      // load dem png
+      var imageObj = new Image();
+      $scope.landCanvas  = document.createElement( 'canvas' );
+      imageObj.onload = function(){
+        $scope.landCanvas.width = imageObj.width;
+        $scope.landCanvas.height = imageObj.height;
+        var context = $scope.landCanvas.getContext( '2d' );
+        context.drawImage( imageObj, 0, 0 );
+      };
+      imageObj.src = '/utils/uk_hi.png';
+
+
       // DEM data unlikely to change so save to local storage.
       // Also source is external (NASA) provider, so be responsible.
       // To clear type 'localStorage.clear()' in console.
@@ -501,13 +515,14 @@ $scope.buildLand = function( data ){
       }
     };
 
-    $scope.fetchBuild = function( item, dest ){
+    $scope.fetchBuild = function( item, dest, done){
       $http.get($scope.data_prefix + item.u, { responseType: "arraybuffer"}  ).
       success(function(data, status, headers, config) {
         var rawdata = Array.prototype.slice.call(new Float32Array(data));
         //var rawdata = Array.prototype.slice.call(new Int16Array(data));
         //var rawdata = Array.prototype.slice.call(new Uint8Array(data));
         $scope.buildWx( dest, rawdata, $scope.dem_width, $scope.dem_height, item.a, Number($scope.wx_mult) );
+        done();
       }).
       error(function(data, status, headers, config) {
         alert( 'Unable to load sample cloud data. Get help.' );
@@ -521,7 +536,7 @@ $scope.buildLand = function( data ){
       var list = [{u:$scope.cld_low,a:40},{u:$scope.cld_med,a:50},
         {u:$scope.cld_hig, a:150}];
         for( l of list ){
-          $scope.fetchBuild( l, $scope.wx_mesh );
+          $scope.fetchBuild( l, $scope.wx_mesh,function(){$scope.saveCanvas();});
         }
       };
       //};
