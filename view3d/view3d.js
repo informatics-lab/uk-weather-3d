@@ -92,7 +92,7 @@ var VIEW3D = {
       this.camera.aspect =  inWidth / inHeight;
       this.camera.updateProjectionMatrix();
       this.renderer.setSize(inWidth, inHeight);
-      this.canvas.html(this.renderer.domElement);
+      //this.canvas.html(this.renderer.domElement);
       this.display();
     },
 
@@ -413,7 +413,8 @@ $scope.buildLand = function( data ){
   //var texture = new THREE.Texture( $scope.generateTexture(data, $scope.dem_width, $scope.dem_height) );
   texture.needsUpdate = true;
   var material = new THREE.MeshPhongMaterial({
-    map: texture, transparent: true, specular: 0x444444, shininess: 10 });
+    map: texture, transparent: true, specular: 0x444444, shininess: 10,
+    bumpMap: texture });
     // (tranparent = true) allows sea to be seen.  Perhaps sea level should be dropped.
 
     var geometry = new THREE.PlaneGeometry(2000, 2000, $scope.dem_width-1, $scope.dem_height-1);
@@ -431,34 +432,37 @@ $scope.buildLand = function( data ){
     mesh.receiveShadow = true;
     mesh.position.z = 0;
     mesh.rotation.x = - Math.PI * 0.5;
+    //THREE.GeometryUtils.merge(geometry, mesh);
     $scope.dem_mesh = mesh;
     VIEW3D.container.add(mesh);
-  };
+  }
 
-  $scope.buildWx = function( dest, data, width, height, add, mult ){
-    var texture = new THREE.Texture( $scope.generateCloudTexture(data, width, height) );
-    texture.needsUpdate = true;
+  $scope.buildWx = function( dest, data, width, height, add, mult, canv ){
+    //var texture = new THREE.Texture( $scope.generateCloudTexture(data, width, height) )
+    var texture = new THREE.Texture( canv )
+    texture.needsUpdate = true
     var material = new THREE.MeshPhongMaterial({side: THREE.DoubleSide,
       map: texture, transparent: true,
       specular: 0xffffff,
-      shininess: Number($scope.shininess) });
+      shininess: Number($scope.shininess)})
+      //,bumpMap: texture})
 
-      var geometry = new THREE.PlaneGeometry(2000, 2000, width-1, height-1);
-      var scale_fac = 1.0 / $scope.distns;
-      console.log("BUILDING WITH", add);
+      var geometry = new THREE.PlaneGeometry(2000, 2000, width-1, height-1)
+      var scale_fac = 1.0 / $scope.distns
+      console.log("BUILDING WITH", add)
       for(i = 0; i < data.length; i++){
-        geometry.vertices[i].z = (data[i] * mult * scale_fac) + add;
+        geometry.vertices[i].z = (data[i] * mult * scale_fac) + add
       }
-      var bufferGeometry = new THREE.BufferGeometry();
-      bufferGeometry.fromGeometry( geometry );
-      geometry = null;
-      var mesh = new THREE.Mesh(bufferGeometry, material);
-      mesh.castShadow = true;
-      mesh.receiveShadow = true;
-      mesh.position.z = 0;
-      mesh.rotation.x = - Math.PI * 0.5;
-      dest.add(mesh);
-    };
+      var bufferGeometry = new THREE.BufferGeometry()
+      bufferGeometry.fromGeometry( geometry )
+      geometry = null
+      var mesh = new THREE.Mesh(bufferGeometry, material)
+      mesh.castShadow = true
+      mesh.receiveShadow = true
+      mesh.position.z = 0
+      mesh.rotation.x = - Math.PI * 0.5
+      dest.add(mesh)
+    }
 
     $scope.getDEM = function( path, params ){
       var requestParams = angular.copy( $scope.defaultDEMParams );
@@ -530,6 +534,17 @@ $scope.buildLand = function( data ){
       });
     };
 
+    $scope.ptcldIdx = function( n ){
+        // The Point Cloud PNG has a grid of 5 x 6 tiles
+        // after 30 the tiles are reused switching from R to
+        // G channel, and finally B.
+        var ptcld = {}
+        ptcld.xi = n % 6
+        ptcld.yi = (~~(n / 6)) % 5
+        ptcld.ci = ~~(n / 30)
+        return ptcld
+    }
+
     $scope.getCoverage = function( path, params ){
 
       $scope.wx_mesh = new THREE.Object3D();
@@ -543,37 +558,56 @@ $scope.buildLand = function( data ){
         var context = ptcldcanv.getContext( '2d' )
         context.drawImage( imageObj, 0, 0 )
         console.log("HAZ DATA " + ptcldcanv.width)
-        var x_0 = 0
-        var y_0 = ptcldcanv.height - 812
+
+        ptcld = $scope.ptcldIdx( 22 )
+        console.log(ptcld)
+        var x_0 = 623 * ptcld.xi
+        var y_0 = ptcldcanv.height - (812 * (ptcld.yi + 1))
+
         var slicecanv = document.createElement('canvas')
-        slicecanv.width = $scope.dem_width
-        slicecanv.height = $scope.dem_height
-        slicecanv.getContext('2d').drawImage(ptcldcanv,
+        slicecanv.width = 4096 //2048
+        slicecanv.height = 4096 //2048
+        var ctx = slicecanv.getContext('2d')
+        ctx.drawImage(ptcldcanv,
           x_0, y_0, 623, 812,
           0, 0, slicecanv.width, slicecanv.height)
         var ctx = slicecanv.getContext('2d')
         var pixels = ctx.getImageData(0,0,slicecanv.width,slicecanv.height)
+        for(var i=0; i<pixels.data.length; i += 4){
+          var v = pixels.data[i+ptcld.ci]
+          pixels.data[i+0] = v
+          pixels.data[i+1] = v
+          pixels.data[i+2] = v
+          pixels.data[i+3] = v * 0.8
+        }
+        ctx.putImageData( pixels, 0, 0 )
+
+        var smlcanv = document.createElement('canvas')
+        smlcanv.width = $scope.dem_width
+        smlcanv.height = $scope.dem_height
+        // Reduce resolution and calc heights
+        ctx = smlcanv.getContext('2d')
+        ctx.drawImage(slicecanv,
+          0, 0, 1024, 1024,
+          0, 0, smlcanv.width, smlcanv.height)
+        pixels = ctx.getImageData(0,0,smlcanv.width,smlcanv.height)
         var floatdata = new Float32Array(pixels.data.length/4)
         for(var i=0; i<pixels.data.length; i += 4){
-          pixels.data[i+1] = pixels.data[i+0]
-          pixels.data[i+2] = pixels.data[i+0]
           floatdata[i/4] =  (100.0/255.0) * pixels.data[i+0]
         }
-        ctx.putImageData( pixels, 0, 0 );
-        //var picurl = slicecanv.toDataURL('image/png')
-        //open( picurl )
-        //var buffer = new ArrayBuffer(pixels.data.length)
-        var rawdata = Array.prototype.slice.call(floatdata)
-        $scope.buildWx( $scope.wx_mesh, rawdata, slicecanv.width, slicecanv.height,
-          20, Number($scope.wx_mult) )
-          $scope.saveCanvas()
 
+        var rawdata = Array.prototype.slice.call(floatdata)
+        $scope.buildWx( $scope.wx_mesh, rawdata, $scope.dem_width,
+          $scope.dem_height,
+          20, Number($scope.wx_mult) , slicecanv)
+          //$scope.saveCanvas()
+        VIEW3D.container.add( $scope.wx_mesh )
       }
       imageObj.src = '/utils/datashadows.png'
 
 
 
-      VIEW3D.container.add( $scope.wx_mesh )
+
 
       /*
       VIEW3D.container.add( $scope.wx_mesh );
