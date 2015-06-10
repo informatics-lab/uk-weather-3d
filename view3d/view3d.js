@@ -163,8 +163,15 @@ var VIEW3D = {
     $scope.camera_z = 2000;
 
 
-    $scope.demdata = null;
-    $scope.rawdata = null;
+    $scope.demdata = null
+    $scope.rawdata = null
+
+    $scope.$watch('level_range', function(){
+      VIEW3D.container.remove( $scope.wx_mesh )
+      $scope.wx_mesh = new THREE.Object3D()
+      console.log('level', $scope.level_range)
+      $scope.loadwxpng( $scope.level_range )
+    })
 
     $scope.$watch('bboxChoice', function(){
       if($scope.wx_mesh){VIEW3D.container.remove( $scope.wx_mesh )};
@@ -175,7 +182,7 @@ var VIEW3D = {
       //console.log('SEARCH', params);
       $scope.getDEM( $location.path(), params );
       $scope.getCoverage( $location.path(), params );
-    });
+    })
 
     $scope.$watchGroup(['light_x','light_y','light_z'], function(){
       VIEW3D.directionalLight.position.set(Number($scope.light_x), Number($scope.light_y), Number($scope.light_z));
@@ -545,9 +552,7 @@ $scope.buildLand = function( data ){
         return ptcld
     }
 
-    $scope.getCoverage = function( path, params ){
-
-      $scope.wx_mesh = new THREE.Object3D();
+    $scope.loadwxpng = function( level ){
 
       // get 70 level png
       var imageObj = new Image()
@@ -559,7 +564,7 @@ $scope.buildLand = function( data ){
         context.drawImage( imageObj, 0, 0 )
         console.log("HAZ DATA " + ptcldcanv.width)
 
-        ptcld = $scope.ptcldIdx( 22 )
+        ptcld = $scope.ptcldIdx( level )
         console.log(ptcld)
         var x_0 = 623 * ptcld.xi
         var y_0 = ptcldcanv.height - (812 * (ptcld.yi + 1))
@@ -599,7 +604,7 @@ $scope.buildLand = function( data ){
         var rawdata = Array.prototype.slice.call(floatdata)
         $scope.buildWx( $scope.wx_mesh, rawdata, $scope.dem_width,
           $scope.dem_height,
-          20, Number($scope.wx_mult) , slicecanv)
+          (level * 5) + 10, Number($scope.wx_mult) , slicecanv)
           //$scope.saveCanvas()
         VIEW3D.container.add( $scope.wx_mesh )
       }
@@ -607,15 +612,12 @@ $scope.buildLand = function( data ){
 
 
 
+    }
 
+    $scope.getCoverage = function( path, params ){
 
-      /*
-      VIEW3D.container.add( $scope.wx_mesh );
-      var list = [{u:$scope.cld_low,a:40},{u:$scope.cld_med,a:50},
-        {u:$scope.cld_hig, a:150}];
-        for( l of list ){
-          $scope.fetchBuild( l, $scope.wx_mesh,function(){$scope.saveCanvas();});
-        }
-      */
-      }
-    });
+      $scope.wx_mesh = new THREE.Object3D()
+
+      $scope.loadwxpng( 18 )
+    }
+  });
