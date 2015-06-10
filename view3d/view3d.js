@@ -606,6 +606,7 @@ $scope.buildLand = function( data ){
           $scope.dem_height,
           (level * 5) + 10, Number($scope.wx_mult) , slicecanv)
           //$scope.saveCanvas()
+        $scope.wx_mesh.updateMatrix()
         VIEW3D.container.add( $scope.wx_mesh )
       }
       imageObj.src = '/utils/datashadows.png'
@@ -618,6 +619,10 @@ $scope.buildLand = function( data ){
 
       $scope.wx_mesh = new THREE.Object3D()
 
-      $scope.loadwxpng( 18 )
+      $scope.loadwxpng( 0 )
+      $scope.loadwxpng( 10 )
+      $scope.loadwxpng( 20 )
+      $scope.loadwxpng( 30 )
+      $scope.loadwxpng( 40 )
     }
   });
