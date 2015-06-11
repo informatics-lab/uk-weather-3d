@@ -55,7 +55,7 @@
     </button>
     </a>
 
-    <input type="range" ng-model="level_range" min="0" max="59" style="margin-top:50px;transform:rotate(270deg);"></input>
+    <input type="range" ng-model-options="{debounce:1000}" ng-model="level_range" min="0" max="59" style="margin-top:50px;transform:rotate(270deg);"></input>
 
   </div><!-- modal -->
   <div class="content">
