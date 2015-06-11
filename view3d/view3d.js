@@ -138,7 +138,7 @@ var VIEW3D = {
     $scope.cld_med = "cld_med.bin";
     $scope.cld_hig = "cld_hig.bin";
 
-    $scope.data_prefix = "/utils/";
+    $scope.data_prefix = "../utils/";
 
 
     //$scope.bboxes = {"UK":"-14,47.5,7,61", "Exeter":"-4.93266,49.31965,-2.12066,52.13165"};
@@ -501,7 +501,7 @@ $scope.buildLand = function( data ){
         var context = $scope.landCanvas.getContext( '2d' );
         context.drawImage( imageObj, 0, 0 );
       };
-      imageObj.src = '/utils/uk_hi.png';
+      imageObj.src = $scope.data_prefix + '/uk_hi.png';
 
 
       // DEM data unlikely to change so save to local storage.
@@ -514,7 +514,7 @@ $scope.buildLand = function( data ){
         $scope.buildLand( $scope.demdata );
       }else{
         //$http.get($scope.demProviderUrl, {params:requestParams, responseType: "arraybuffer"}  ).
-        $http.get('/utils/dem.bin', {responseType: "arraybuffer"}).
+        $http.get($scope.data_prefix + '/dem.bin', {responseType: "arraybuffer"}).
         success(function(data, status, headers, config) {
           $scope.demdata = Array.prototype.slice.call(new Int16Array(data));
           localStorage[storageName] = JSON.stringify($scope.demdata);
@@ -609,7 +609,7 @@ $scope.buildLand = function( data ){
         $scope.wx_mesh.updateMatrix()
         VIEW3D.container.add( $scope.wx_mesh )
       }
-      imageObj.src = '/utils/datashadows.png'
+      imageObj.src = $scope.data_prefix + '/datashadows.png'
 
 
 
