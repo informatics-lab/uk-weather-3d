@@ -9,7 +9,6 @@
 
 
 var VIEW3D = {
-
   scene : null,
   camera : null,
   controls : null,
@@ -22,7 +21,8 @@ var VIEW3D = {
 
   init_scene : function init_scene(){
     this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera(55.0, window.innerWidth / window.innerHeight, 0.5, 3000000);
+    this.camera = new THREE.PerspectiveCamera(55.0, 
+      window.innerWidth / window.innerHeight, 0.5, 3000000);
     this.camera.position.set(130, 2000, 1300);
     this.camera.lookAt(new THREE.Vector3(0, 0, 0));
 
@@ -148,7 +148,7 @@ var VIEW3D = {
     $scope.paletteColour1 =  "rgba(255,255,255,0.8)";
     $scope.shininess = "90";
 
-    $scope.wx_mult = 200;
+    $scope.wx_mult = 20;
     $scope.wx_add = 50;
     $scope.wx_mesh = null;
 
@@ -458,7 +458,7 @@ $scope.buildLand = function( data ){
       var scale_fac = 1.0 / $scope.distns
       console.log("BUILDING WITH", add)
       for(i = 0; i < data.length; i++){
-        geometry.vertices[i].z = (data[i] * mult * scale_fac) + add
+        geometry.vertices[i].z = (data[i] * mult * scale_fac) // + add
       }
       var bufferGeometry = new THREE.BufferGeometry()
       bufferGeometry.fromGeometry( geometry )
@@ -466,7 +466,7 @@ $scope.buildLand = function( data ){
       var mesh = new THREE.Mesh(bufferGeometry, material)
       mesh.castShadow = true
       mesh.receiveShadow = true
-      mesh.position.z = 0
+      mesh.position.y = (add * 2)
       mesh.rotation.x = - Math.PI * 0.5
       dest.add(mesh)
     }
@@ -524,7 +524,7 @@ $scope.buildLand = function( data ){
           console.log(status, data);
         });
       }
-    };
+    }
 
     $scope.fetchBuild = function( item, dest, done){
       $http.get($scope.data_prefix + item.u, { responseType: "arraybuffer"}  ).
@@ -536,93 +536,97 @@ $scope.buildLand = function( data ){
         done();
       }).
       error(function(data, status, headers, config) {
-        alert( 'Unable to load sample cloud data. Get help.' );
-        console.log(status, data);
-      });
-    };
+        alert( 'Unable to load sample cloud data. Get help.' )
+        console.log(status, data)
+      })
+    }
 
     $scope.ptcldIdx = function( n ){
-        // The Point Cloud PNG has a grid of 5 x 6 tiles
-        // after 30 the tiles are reused switching from R to
-        // G channel, and finally B.
-        var ptcld = {}
-        ptcld.xi = n % 6
-        ptcld.yi = (~~(n / 6)) % 5
-        ptcld.ci = ~~(n / 30)
-        return ptcld
+      // The Point Cloud PNG has a grid of 5 x 6 tiles
+      // after 30 the tiles are reused switching from R to
+      // G channel, and finally B.
+      var ptcld = {}
+      ptcld.xi = n % 6
+      ptcld.yi = (~~(n / 6)) % 5
+      ptcld.ci = ~~(n / 30)
+      return ptcld
     }
 
-    $scope.loadwxpng = function( level ){
-
-      // get 70 level png
-      var imageObj = new Image()
-      var ptcldcanv  = document.createElement( 'canvas' )
-      imageObj.onload = function(){
-        ptcldcanv.width = imageObj.width
-        ptcldcanv.height = imageObj.height
-        var context = ptcldcanv.getContext( '2d' )
-        context.drawImage( imageObj, 0, 0 )
-        console.log("HAZ DATA " + ptcldcanv.width)
-
-        ptcld = $scope.ptcldIdx( level )
-        console.log(ptcld)
-        var x_0 = 623 * ptcld.xi
-        var y_0 = ptcldcanv.height - (812 * (ptcld.yi + 1))
-
-        var slicecanv = document.createElement('canvas')
-        slicecanv.width = 4096 //2048
-        slicecanv.height = 4096 //2048
-        var ctx = slicecanv.getContext('2d')
-        ctx.drawImage(ptcldcanv,
-          x_0, y_0, 623, 812,
-          0, 0, slicecanv.width, slicecanv.height)
-        var ctx = slicecanv.getContext('2d')
-        var pixels = ctx.getImageData(0,0,slicecanv.width,slicecanv.height)
-        for(var i=0; i<pixels.data.length; i += 4){
-          var v = pixels.data[i+ptcld.ci]
-          pixels.data[i+0] = v
-          pixels.data[i+1] = v
-          pixels.data[i+2] = v
-          pixels.data[i+3] = v * 0.8
-        }
-        ctx.putImageData( pixels, 0, 0 )
-
-        var smlcanv = document.createElement('canvas')
-        smlcanv.width = $scope.dem_width
-        smlcanv.height = $scope.dem_height
-        // Reduce resolution and calc heights
-        ctx = smlcanv.getContext('2d')
-        ctx.drawImage(slicecanv,
-          0, 0, 1024, 1024,
-          0, 0, smlcanv.width, smlcanv.height)
-        pixels = ctx.getImageData(0,0,smlcanv.width,smlcanv.height)
-        var floatdata = new Float32Array(pixels.data.length/4)
-        for(var i=0; i<pixels.data.length; i += 4){
-          floatdata[i/4] =  (100.0/255.0) * pixels.data[i+0]
-        }
-
-        var rawdata = Array.prototype.slice.call(floatdata)
-        $scope.buildWx( $scope.wx_mesh, rawdata, $scope.dem_width,
-          $scope.dem_height,
-          (level * 5) + 10, Number($scope.wx_mult) , slicecanv)
-          //$scope.saveCanvas()
-        $scope.wx_mesh.updateMatrix()
-        VIEW3D.container.add( $scope.wx_mesh )
-      }
-      imageObj.src = '/utils/datashadows.png'
+    $scope.loadwxpng = function(){
 
 
 
-    }
+      function loadLayers(ptcldcanv){
 
-    $scope.getCoverage = function( path, params ){
 
-      $scope.wx_mesh = new THREE.Object3D()
+        for( var lev = 0; lev < 60; lev += 2)
+        {
 
-      $scope.loadwxpng( 0 )
-      $scope.loadwxpng( 10 )
-      $scope.loadwxpng( 20 )
-      $scope.loadwxpng( 30 )
-      $scope.loadwxpng( 40 )
-    }
-  });
+          var slicecanv = document.createElement('canvas')
+          slicecanv.width = 1024 //2048
+          slicecanv.height = 1024 //2048
+          var ctx = slicecanv.getContext('2d')
+
+          var smlcanv = document.createElement('canvas')
+          smlcanv.width = $scope.dem_width
+          smlcanv.height = $scope.dem_height
+          // Reduce resolution and calc heights
+          var sctx = smlcanv.getContext('2d')
+
+          ptcld = $scope.ptcldIdx( lev )
+          console.log(ptcld)
+          var x_0 = 623 * ptcld.xi
+          var y_0 = ptcldcanv.height - (812 * (ptcld.yi + 1))
+          ctx.drawImage(ptcldcanv,
+            x_0, y_0, 623, 812,
+            0, 0, slicecanv.width, slicecanv.height)
+
+            var pixels = ctx.getImageData(0,0,slicecanv.width,slicecanv.height)
+            for(var i=0; i<pixels.data.length; i += 4){
+              var v = pixels.data[i+ptcld.ci]
+              pixels.data[i+0] = v
+              pixels.data[i+1] = v
+              pixels.data[i+2] = v
+              pixels.data[i+3] = v * 0.2
+            }
+            ctx.putImageData( pixels, 0, 0 )
+
+            sctx.drawImage(slicecanv,
+              0, 0, slicecanv.width, slicecanv.height,
+              0, 0, smlcanv.width, smlcanv.height)
+              pixels = sctx.getImageData(0,0,smlcanv.width,smlcanv.height)
+              var floatdata = new Float32Array(pixels.data.length/4)
+              for(var i=0; i<pixels.data.length; i += 4){
+                floatdata[i/4] =  (100.0/255.0) * pixels.data[i+0]
+              }
+              pixels = null
+              $scope.buildWx( $scope.wx_mesh, floatdata, $scope.dem_width,
+                $scope.dem_height,
+                (lev * 5) + 10, Number($scope.wx_mult) , slicecanv)
+                $scope.wx_mesh.updateMatrix()
+                VIEW3D.container.add( $scope.wx_mesh )
+
+              }
+              $scope.saveCanvas()
+            }
+
+            // get 70 level png
+            var imageObj = new Image()
+            var ptcldcanv  = document.createElement( 'canvas' )
+            imageObj.onload = function(){
+              ptcldcanv.width = imageObj.width
+              ptcldcanv.height = imageObj.height
+              var context = ptcldcanv.getContext( '2d' )
+              context.drawImage( imageObj, 0, 0 )
+              loadLayers(ptcldcanv)
+            }
+            imageObj.src = '/utils/datashadows.png'
+          }
+
+          $scope.getCoverage = function( path, params ){
+
+            $scope.wx_mesh = new THREE.Object3D()
+            $scope.loadwxpng()
+
+          }
+        })
