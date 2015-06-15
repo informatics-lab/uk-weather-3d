@@ -21,7 +21,7 @@ var VIEW3D = {
 
   init_scene : function init_scene(){
     this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera(55.0, 
+    this.camera = new THREE.PerspectiveCamera(55.0,
       window.innerWidth / window.innerHeight, 0.5, 3000000);
     this.camera.position.set(130, 2000, 1300);
     this.camera.lookAt(new THREE.Vector3(0, 0, 0));
@@ -38,10 +38,11 @@ var VIEW3D = {
       this.renderer.setClearColor( 0x6666ff, 1);
 
 
-      this.directionalLight = new THREE.DirectionalLight(0xffffdd, 1);
-      //directionalLight.position.set(-600, 300, -600);
-      this.directionalLight.position.set(200, 800, 1500);
-      this.scene.add(this.directionalLight);
+      var light = new THREE.AmbientLight( 0xaaaaaa ); // white light
+      this.scene.add( light )
+      //this.directionalLight = new THREE.DirectionalLight(0xffffdd, 1);
+      //this.directionalLight.position.set(200, 800, 1500);
+      //this.scene.add(this.directionalLight);
 
       var uniforms1 = {
         time: { type: "f", value: 1.0 },
