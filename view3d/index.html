@@ -52,11 +52,13 @@
     <a href="" ng-click="setCamera(0)">
       <button style="width:132px;height:132px;padding:0px;border-radius:10px">
       <img ng-src="{{thumb0}}" style="width:128px;height:128px;"></img>
+
     </button>
     </a>
-
+    <canvas id="vidcanv" style="width:128px;height:128px;"></canvas>
+    <!--
     <input type="range" ng-model="level_range" min="0" max="59" style="margin-top:50px;transform:rotate(270deg);"></input>
-
+    -->
   </div><!-- modal -->
   <div class="content">
     <div id="webgl"></div>

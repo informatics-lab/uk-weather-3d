@@ -18,229 +18,257 @@ var VIEW3D = {
   directionalLight : null,
   fps: 30,  // 30 is current Firefox max, as far as I can tell.
   // Chrome will go up to 60 which gets GPU hot.
+  video: null,
+  video_canv: null,
+  video_context: null,
 
+  init_video : function init_video()
+  {
+    this.video_canv  = document.createElement( 'canvas' )
+    var file = "out_623_812_59_4096_4096.webm"
+
+    this.video = document.createElement( 'video' )
+    this.video.loop = true
+    this.video.id = 'video'
+    this.video.type = ' video/ogg; codecs="theora, vorbis" '
+    this.video.src = file
+    this.video.crossOrigin = "Anonymous"
+    this.video.autoplay = true
+    this.video.load() // must call after setting/changing source
+    this.video.playbackRate = 0.2
+    this.video.addEventListener("loadedmetadata", function () {
+      alert( 'video metadata loaded' )
+      VIEW3D.video_canv.width = VIEW3D.video.videoWidth
+      VIEW3D.video_canv.height = VIEW3D.video.videoHeight
+      console.log("vid width", VIEW3D.video_canv.width)
+    })
+    this.video.addEventListener('loadeddata', function() {
+      VIEW3D.video.play()
+    })
+    this.video_context = this.video_canv.getContext("2d")
+  },
   init_scene : function init_scene(){
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(55.0,
       window.innerWidth / window.innerHeight, 0.5, 3000000);
-    this.camera.position.set(130, 2000, 1300);
-    this.camera.lookAt(new THREE.Vector3(0, 0, 0));
+      this.camera.position.set(130, 2000, 1300);
+      this.camera.lookAt(new THREE.Vector3(0, 0, 0));
 
-    this.controls = new THREE.TrackballControls(this.camera);
-    this.controls.addEventListener( 'change', function(){VIEW3D.fps=30;});
+      this.controls = new THREE.TrackballControls(this.camera);
+      this.controls.addEventListener( 'change', function(){VIEW3D.fps=30;});
 
-    //this.renderer = new THREE.WebGLRenderer({alpha: true});
-    this.mycanvas = document.createElement('canvas');
-    this.renderer = new THREE.WebGLRenderer({canvas: this.mycanvas,
-      preserveDrawingBuffer   : true,
-      alpha: true});
-      this.renderer.setSize(window.innerWidth, window.innerHeight);
-      this.renderer.setClearColor( 0x6666ff, 1);
+      //this.renderer = new THREE.WebGLRenderer({alpha: true});
+      this.mycanvas = document.createElement('canvas');
+      this.renderer = new THREE.WebGLRenderer({canvas: this.mycanvas,
+        preserveDrawingBuffer   : true,
+        alpha: true});
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setClearColor( 0x6666ff, 1);
 
 
-      var light = new THREE.AmbientLight( 0xaaaaaa ); // white light
-      this.scene.add( light )
-      //this.directionalLight = new THREE.DirectionalLight(0xffffdd, 1);
-      //this.directionalLight.position.set(200, 800, 1500);
-      //this.scene.add(this.directionalLight);
+        var light = new THREE.AmbientLight( 0xaaaaaa ); // white light
+        this.scene.add( light )
+        //this.directionalLight = new THREE.DirectionalLight(0xffffdd, 1);
+        //this.directionalLight.position.set(200, 800, 1500);
+        //this.scene.add(this.directionalLight);
 
-      var uniforms1 = {
-        time: { type: "f", value: 1.0 },
-        resolution: { type: "v2", value: new THREE.Vector2() }
-      };
+        var uniforms1 = {
+          time: { type: "f", value: 1.0 },
+          resolution: { type: "v2", value: new THREE.Vector2() }
+        };
 
-      var attributes = {
-        displacement: {
-          type: 'f', // a float
-          value: [] // an empty array
+        var attributes = {
+          displacement: {
+            type: 'f', // a float
+            value: [] // an empty array
+          }
+        };
+
+        var shader_material = new THREE.MeshPhongMaterial({color: 0x444488});
+
+
+        var aMeshMirror = new THREE.Mesh(
+          new THREE.PlaneBufferGeometry(2000, 2000, 100, 100), shader_material
+        );
+        aMeshMirror.rotation.x = - Math.PI * 0.5;
+
+        aMeshMirror.castShadow = false;
+        aMeshMirror.receiveShadow = true;
+
+        this.scene.add(aMeshMirror);
+
+        this.container = new THREE.Object3D();
+        this.scene.add(this.container);
+      },
+
+
+      display: function display() {
+        //this.water.render();
+        this.renderer.render(this.scene, this.camera);
+        if(stats){
+          stats.update();
         }
-      };
+      },
 
-      var shader_material = new THREE.MeshPhongMaterial({color: 0x444488});
+      update: function update() {
+        //this.water.material.uniforms.time.value += 1.0 / 60.0;
+        if ( VIEW3D.video.readyState === VIEW3D.video.HAVE_ENOUGH_DATA)
+        {
+          //console.log('drawing')
+          this.video_context.drawImage( this.video, 0, 0, 128, 128 )
+          // 0, 0, w*shrinkFactor, videoImage.height*shrinkFactor, 0, 0, w, videoImage.height );
 
+        }
+        this.camera_position = VIEW3D.camera.position;
+        this.controls.update();
+        this.display();
+      },
 
-      var aMeshMirror = new THREE.Mesh(
-        new THREE.PlaneBufferGeometry(2000, 2000, 100, 100), shader_material
-      );
-      aMeshMirror.rotation.x = - Math.PI * 0.5;
+      resize: function resize(inWidth, inHeight) {
+        this.camera.aspect =  inWidth / inHeight;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(inWidth, inHeight);
+        //this.canvas.html(this.renderer.domElement);
+        this.display();
+      },
 
-      aMeshMirror.castShadow = false;
-      aMeshMirror.receiveShadow = true;
+      mainLoop: function() {
+        // Left to run at max speed I get almost 60fps on a Macbook Pro.
+        // Which will cause the fan to come on and drain the battery.
+        // The timeout sets the max frame rate.  1000/5 gives 5fps.
+        // fps is increased when the controls are moved.  Gives a much
+        // smoother experience.
+        setTimeout( function() {
+          requestAnimationFrame(VIEW3D.mainLoop);
+        }, 1000 / this.fps );
 
-      this.scene.add(aMeshMirror);
-
-      this.container = new THREE.Object3D();
-      this.scene.add(this.container);
-    },
-
-
-    display: function display() {
-      //this.water.render();
-      this.renderer.render(this.scene, this.camera);
-      if(stats){
-        stats.update();
+        if(this.fps>5){this.fps--;}
+        VIEW3D.update();
       }
-    },
 
-    update: function update() {
-      //this.water.material.uniforms.time.value += 1.0 / 60.0;
-      this.camera_position = VIEW3D.camera.position;
-      this.controls.update();
-      this.display();
-    },
+    };
 
-    resize: function resize(inWidth, inHeight) {
-      this.camera.aspect =  inWidth / inHeight;
-      this.camera.updateProjectionMatrix();
-      this.renderer.setSize(inWidth, inHeight);
-      //this.canvas.html(this.renderer.domElement);
-      this.display();
-    },
-
-    mainLoop: function() {
-      // Left to run at max speed I get almost 60fps on a Macbook Pro.
-      // Which will cause the fan to come on and drain the battery.
-      // The timeout sets the max frame rate.  1000/5 gives 5fps.
-      // fps is increased when the controls are moved.  Gives a much
-      // smoother experience.
-      setTimeout( function() {
-        requestAnimationFrame(VIEW3D.mainLoop);
-      }, 1000 / this.fps );
-
-      if(this.fps>5){this.fps--;}
-      VIEW3D.update();
-    }
-
-  };
-
-  VIEW3D.init_scene();
+    VIEW3D.init_video()
+    VIEW3D.init_scene()
 
 
-  angular.module('viewer', []).controller("MainController", function($scope, $http, $location){
+    angular.module('viewer', []).controller("MainController", function($scope, $http, $location){
 
-    $scope.dem_width = 256;
-    $scope.dem_height = 256;
-    // Don't use huge numbers for width or height.  300x300 is just fine.
-    // For a start, localStorage will fail with large data files as it's stored as text!!
-    //
-    // Issuing localStorage.clear() in console is useful too :-)
+      $scope.dem_width = 256;
+      $scope.dem_height = 256;
+      // Don't use huge numbers for width or height.  300x300 is just fine.
+      // For a start, localStorage will fail with large data files as it's stored as text!!
+      //
+      // Issuing localStorage.clear() in console is useful too :-)
 
-    $scope.landCanvas = null;
-    $scope.position = null; // camera position
+      $scope.landCanvas = null;
+      $scope.position = null; // camera position
 
-    // The OpenShift application allows cross origin requests (for now).
-    //$scope.demProviderUrl = "http://python-wetoffice.rhcloud.com/dembin";
-    //$scope.wxProviderUrl = "http://python-wetoffice.rhcloud.com/capbin";
-    // To use your own (local) server for data replace with these -
-    //$scope.demProviderUrl = "/dembin";
-    //$scope.wxProviderUrl = "/capbin";
+      // The OpenShift application allows cross origin requests (for now).
+      //$scope.demProviderUrl = "http://python-wetoffice.rhcloud.com/dembin";
+      //$scope.wxProviderUrl = "http://python-wetoffice.rhcloud.com/capbin";
+      // To use your own (local) server for data replace with these -
+      //$scope.demProviderUrl = "/dembin";
+      //$scope.wxProviderUrl = "/capbin";
 
-    $scope.cld_low = "cld_low.bin";
-    $scope.cld_med = "cld_med.bin";
-    $scope.cld_hig = "cld_hig.bin";
+      $scope.cld_low = "cld_low.bin";
+      $scope.cld_med = "cld_med.bin";
+      $scope.cld_hig = "cld_hig.bin";
 
-    $scope.data_prefix = "/utils/";
-
-
-    //$scope.bboxes = {"UK":"-14,47.5,7,61", "Exeter":"-4.93266,49.31965,-2.12066,52.13165"};
-    $scope.bboxes = {"UK":"-12,50,3.5,59", "Exeter":"-4.93266,49.31965,-2.12066,52.13165"};
-    $scope.bboxChoice = $scope.bboxes["UK"]; // watched
-    $scope.paletteColour0 =  "rgba(255,255,255,0)";
-    $scope.paletteColour1 =  "rgba(255,255,255,0.8)";
-    $scope.shininess = "90";
-
-    $scope.wx_mult = 20;
-    $scope.wx_add = 50;
-    $scope.wx_mesh = null;
-
-    $scope.dem_mesh = null;
-
-    $scope.light_x = -1000;
-    $scope.light_y = 1500;
-    $scope.light_z = -900;
-
-    $scope.camera_x = 0;
-    $scope.camera_y = 2000;
-    $scope.camera_z = 2000;
+      $scope.data_prefix = "/utils/";
 
 
-    $scope.demdata = null
-    $scope.rawdata = null
+      //$scope.bboxes = {"UK":"-14,47.5,7,61", "Exeter":"-4.93266,49.31965,-2.12066,52.13165"};
+      $scope.bboxes = {"UK":"-12,50,3.5,59", "Exeter":"-4.93266,49.31965,-2.12066,52.13165"};
+      $scope.bboxChoice = $scope.bboxes["UK"]; // watched
+      $scope.paletteColour0 =  "rgba(255,255,255,0)";
+      $scope.paletteColour1 =  "rgba(255,255,255,0.8)";
+      $scope.shininess = "90";
 
-    $scope.$watch('level_range', function(){
-      VIEW3D.container.remove( $scope.wx_mesh )
-      $scope.wx_mesh = new THREE.Object3D()
-      console.log('level', $scope.level_range)
-      $scope.loadwxpng( $scope.level_range )
-    })
+      $scope.wx_mult = 20;
+      $scope.wx_add = 50;
+      $scope.wx_mesh = null;
 
-    $scope.$watch('bboxChoice', function(){
-      if($scope.wx_mesh){VIEW3D.container.remove( $scope.wx_mesh )};
-      if($scope.dem_mesh){VIEW3D.container.remove( $scope.dem_mesh )};
-      var params = angular.copy( $location.search());
-      params.BBOX = $scope.bboxChoice;
-      //console.log('PATH', $location.path());
-      //console.log('SEARCH', params);
-      $scope.getDEM( $location.path(), params );
-      $scope.getCoverage( $location.path(), params );
-    })
+      $scope.dem_mesh = null;
 
-    $scope.$watchGroup(['light_x','light_y','light_z'], function(){
-      VIEW3D.directionalLight.position.set(Number($scope.light_x), Number($scope.light_y), Number($scope.light_z));
-      //VIEW3D.water.sunDirection = VIEW3D.directionalLight.position.normalize();
-    });
+      $scope.light_x = -1000;
+      $scope.light_y = 1500;
+      $scope.light_z = -900;
 
-    $scope.$watchGroup(['camera_x','camera_y','camera_z'], function(){
-      VIEW3D.camera.position.set(Number($scope.camera_x), Number($scope.camera_y), Number($scope.camera_z));
-    });
+      $scope.camera_x = 0;
+      $scope.camera_y = 2000;
+      $scope.camera_z = 2000;
 
-    $scope.getCameraPosition = function() {
-      $scope.position = VIEW3D.camera.position;
-    }
 
-    $scope.rebuildWx = function() {
-      //VIEW3D.container.remove( $scope.wx_mesh );
-      //$scope.buildWx( $scope.rawdata, $scope.dem_width, $scope.dem_height );
-    }
+      $scope.demdata = null
+      $scope.rawdata = null
 
-    $scope.saveCanvas = function() {
-      var tmpcanv = document.createElement('canvas');
-      var src_aspect = VIEW3D.mycanvas.width / VIEW3D.mycanvas.height;
-      tmpcanv.width = 128;
-      tmpcanv.height = 128;
-      max_x = tmpcanv.height * src_aspect;
-      min_x = (tmpcanv.width - max_x) * 0.5;
-      max_y = tmpcanv.height;
-      min_y = 0;
-      tmpcanv.getContext('2d').drawImage(VIEW3D.mycanvas, min_x, min_y, max_x, max_y);
-      //window.open(tmpcanv.toDataURL('image/png'));
-      $scope.thumb0=tmpcanv.toDataURL('image/png');
+      $scope.$watch('bboxChoice', function(){
+        if($scope.wx_mesh){VIEW3D.container.remove( $scope.wx_mesh )};
+        if($scope.dem_mesh){VIEW3D.container.remove( $scope.dem_mesh )};
+        var params = angular.copy( $location.search());
+        params.BBOX = $scope.bboxChoice;
+        //console.log('PATH', $location.path());
+        //console.log('SEARCH', params);
+        $scope.getDEM( $location.path(), params );
+        $scope.getCoverage( $location.path(), params );
+      })
 
-    }
+      $scope.$watchGroup(['light_x','light_y','light_z'], function(){
+        //VIEW3D.directionalLight.position.set(Number($scope.light_x), Number($scope.light_y), Number($scope.light_z));
+      });
 
-    $scope.setCamera = function(n) {
-      console.log('camera', VIEW3D.camera);
-      VIEW3D.controls.reset();
-      VIEW3D.camera.position.set(0, 2000, 2000);
-    }
+      $scope.$watchGroup(['camera_x','camera_y','camera_z'], function(){
+        VIEW3D.camera.position.set(Number($scope.camera_x), Number($scope.camera_y), Number($scope.camera_z));
+      });
 
-    // If you'd rather not use the followimg HTML5 canvas gradient trick,
-    // you can create palettes like this.
-    /*
-    $scope.paletteFn = function( v ){
-    var rgba = {'r':0,'g':0,'b':0,'a':0};
-    if (v < 1 ){
-    rgba.r = 15;
-    rgba.g = 15;
-    rgba.b = 255;
-    rgba.a = 0;
-  }else{
-  rgba.r = (v < 500) ? v/3 : 160;
-  rgba.g = (rgba.r < 100) ? 200-rgba.r: 128;
-  rgba.b = 0;
-  rgba.a = 255;
-}
-return rgba;
+      $scope.getCameraPosition = function() {
+        $scope.position = VIEW3D.camera.position;
+      }
+
+      $scope.rebuildWx = function() {
+        //VIEW3D.container.remove( $scope.wx_mesh );
+        //$scope.buildWx( $scope.rawdata, $scope.dem_width, $scope.dem_height );
+      }
+
+      $scope.saveCanvas = function() {
+        var tmpcanv = document.createElement('canvas');
+        var src_aspect = VIEW3D.mycanvas.width / VIEW3D.mycanvas.height;
+        tmpcanv.width = 128;
+        tmpcanv.height = 128;
+        max_x = tmpcanv.height * src_aspect;
+        min_x = (tmpcanv.width - max_x) * 0.5;
+        max_y = tmpcanv.height;
+        min_y = 0;
+        tmpcanv.getContext('2d').drawImage(VIEW3D.mycanvas, min_x, min_y, max_x, max_y);
+        //window.open(tmpcanv.toDataURL('image/png'));
+        $scope.thumb0=tmpcanv.toDataURL('image/png');
+
+      }
+
+      $scope.setCamera = function(n) {
+        console.log('camera', VIEW3D.camera);
+        VIEW3D.controls.reset();
+        VIEW3D.camera.position.set(0, 2000, 2000);
+      }
+
+      // If you'd rather not use the followimg HTML5 canvas gradient trick,
+      // you can create palettes like this.
+      /*
+      $scope.paletteFn = function( v ){
+      var rgba = {'r':0,'g':0,'b':0,'a':0};
+      if (v < 1 ){
+      rgba.r = 15;
+      rgba.g = 15;
+      rgba.b = 255;
+      rgba.a = 0;
+    }else{
+    rgba.r = (v < 500) ? v/3 : 160;
+    rgba.g = (rgba.r < 100) ? 200-rgba.r: 128;
+    rgba.b = 0;
+    rgba.a = 255;
+  }
+  return rgba;
 }
 */
 
@@ -554,15 +582,9 @@ $scope.buildLand = function( data ){
     }
 
     $scope.loadwxpng = function(){
-
-
-
       function loadLayers(ptcldcanv){
-
-
-        for( var lev = 0; lev < 60; lev += 2)
+        for( var lev = 0; lev < 60; lev += 4)
         {
-
           var slicecanv = document.createElement('canvas')
           slicecanv.width = 1024 //2048
           slicecanv.height = 1024 //2048
