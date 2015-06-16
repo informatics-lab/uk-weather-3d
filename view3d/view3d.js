@@ -483,11 +483,17 @@ $scope.buildLand = function( data ){
       shininess: Number($scope.shininess)})
       //,bumpMap: texture})
 
-      var geometry = new THREE.PlaneGeometry(2000, 2000, width-1, height-1)
-      var scale_fac = 1.0 / $scope.distns
-      console.log("BUILDING WITH", add)
-      for(i = 0; i < data.length; i++){
-        geometry.vertices[i].z = (data[i] * mult * scale_fac) // + add
+      var geometry = null
+      if(data != null){
+        geometry = new THREE.PlaneGeometry(2000, 2000, width-1, height-1)
+        var scale_fac = 1.0 / $scope.distns
+        console.log("BUILDING WITH", add)
+        for(i = 0; i < data.length; i++){
+          geometry.vertices[i].z = (data[i] * mult * scale_fac) // + add
+        }
+      }
+      else{
+        geometry = new THREE.PlaneGeometry(2000, 2000)
       }
       var bufferGeometry = new THREE.BufferGeometry()
       bufferGeometry.fromGeometry( geometry )
@@ -583,7 +589,7 @@ $scope.buildLand = function( data ){
 
     $scope.loadwxpng = function(){
       function loadLayers(ptcldcanv){
-        for( var lev = 0; lev < 60; lev += 4)
+        for( var lev = 1; lev < 60; lev += 1)
         {
           var slicecanv = document.createElement('canvas')
           slicecanv.width = 1024 //2048
@@ -614,6 +620,7 @@ $scope.buildLand = function( data ){
             }
             ctx.putImageData( pixels, 0, 0 )
 
+            /*
             sctx.drawImage(slicecanv,
               0, 0, slicecanv.width, slicecanv.height,
               0, 0, smlcanv.width, smlcanv.height)
@@ -623,6 +630,8 @@ $scope.buildLand = function( data ){
                 floatdata[i/4] =  (100.0/255.0) * pixels.data[i+0]
               }
               pixels = null
+              */
+              floatdata = null
               $scope.buildWx( $scope.wx_mesh, floatdata, $scope.dem_width,
                 $scope.dem_height,
                 (lev * 5) + 10, Number($scope.wx_mult) , slicecanv)
