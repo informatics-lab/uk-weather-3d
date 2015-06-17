@@ -35,7 +35,7 @@
         Colour 1 <input type="text" ng-model="paletteColour1"></input><br>
         Shiny <input type="text" ng-model="shininess"></input><br>
 
-      <form name="hh">
+        <form name="hh">
         light posn <br>
         X <input type="text" ng-model="light_x"></input><br>
         Y <input type="text" ng-model="light_y"></input><br>
@@ -48,30 +48,28 @@
         mult <input type="text" ng-model="wx_mult"></input><br>
       </form>
     -->
-    </div><!-- info -->
-    <a href="" ng-click="setCamera(0)">
-      <button style="width:132px;height:132px;padding:0px;border-radius:10px">
+  </div><!-- info -->
+  <a href="" ng-click="setCamera(0)">
+    <button style="width:132px;height:132px;padding:0px;border-radius:10px">
       <img ng-src="{{thumb0}}" style="width:128px;height:128px;"></img>
-
     </button>
-    </a>
-    <canvas id="vidcanv" style="width:128px;height:128px;"></canvas>
-    <!--
-    <input type="range" ng-model="level_range" min="0" max="59" style="margin-top:50px;transform:rotate(270deg);"></input>
-    -->
-  </div><!-- modal -->
-  <div class="content">
-    <div id="webgl"></div>
-  </div>
+  </a>
+  <!--
+  <input type="range" ng-model="level_range" min="0" max="59" style="margin-top:50px;transform:rotate(270deg);"></input>
+-->
+</div><!-- modal -->
+<div class="content">
+  <div id="webgl"></div>
+</div>
 </div><!-- MainController -->
 <script src="view3d.js"></script>
 <script>
-  document.getElementById('webgl').appendChild(VIEW3D.renderer.domElement);
-  var stats = new Stats();
-  //document.getElementById('info').appendChild( stats.domElement );
-  window.addEventListener( 'resize', function(){
+document.getElementById('webgl').appendChild(VIEW3D.renderer.domElement);
+var stats = new Stats();
+//document.getElementById('info').appendChild( stats.domElement );
+window.addEventListener( 'resize', function(){
   VIEW3D.resize(window.innerWidth, window.innerHeight)}, false );
   VIEW3D.mainLoop(VIEW3D);
-</script>
+  </script>
 </body>
 </html>

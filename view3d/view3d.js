@@ -20,12 +20,14 @@ var VIEW3D = {
   // Chrome will go up to 60 which gets GPU hot.
   video: null,
   video_canv: null,
-  video_context: null,
+  video_canv_context: null,
+  update_mesh: null,
+  wx_layers: {},
 
   init_video : function init_video()
   {
     this.video_canv  = document.createElement( 'canvas' )
-    var file = "out_623_812_59_4096_4096.webm"
+    var file = "cloud_frac2_623_812_70_4096_4096.ogv"
 
     this.video = document.createElement( 'video' )
     this.video.loop = true
@@ -35,17 +37,62 @@ var VIEW3D = {
     this.video.crossOrigin = "Anonymous"
     this.video.autoplay = true
     this.video.load() // must call after setting/changing source
-    this.video.playbackRate = 0.2
+    this.video.playbackRate = 4.0
     this.video.addEventListener("loadedmetadata", function () {
       alert( 'video metadata loaded' )
-      VIEW3D.video_canv.width = VIEW3D.video.videoWidth
-      VIEW3D.video_canv.height = VIEW3D.video.videoHeight
-      console.log("vid width", VIEW3D.video_canv.width)
+      var o = VIEW3D
+      o.video_canv.width = o.video.videoWidth
+      o.video_canv.height = o.video.videoHeight
+      console.log("vid width", o.video_canv.width)
     })
     this.video.addEventListener('loadeddata', function() {
       VIEW3D.video.play()
     })
-    this.video_context = this.video_canv.getContext("2d")
+    this.video_canv_context = this.video_canv.getContext("2d")
+  },
+  video_extract_layers : function video_extract_layers()
+  {
+    var ptcldIdx = function( n ){
+      // The Point Cloud PNG has a grid of 5 x 6 tiles
+      // after 30 the tiles are reused switching from R to
+      // G channel, and finally B.
+      var ptcld = {}
+      ptcld.xi = n % 6
+      ptcld.yi = (~~(n / 6)) % 5
+      ptcld.ci = ~~(n / 30)
+      return ptcld
+    }
+    var getLayer = function ( ptcld, src, srcHeight, dstcanv, ctx ){
+
+      var x_0 = 623 * ptcld.xi
+      var y_0 = srcHeight - (812 * (ptcld.yi + 1))
+      ctx.drawImage(src,
+        x_0, y_0, 623, 812,
+        0, 0, dstcanv.width, dstcanv.height)
+
+      var pixels = ctx.getImageData(0,0,dstcanv.width,dstcanv.height)
+      for(var i=0; i<pixels.data.length; i += 4){
+          var v = pixels.data[i+ptcld.ci]
+          pixels.data[i+0] = v
+          pixels.data[i+1] = v
+          pixels.data[i+2] = v
+          pixels.data[i+3] = v * 0.8
+      }
+      ctx.putImageData( pixels, 0, 0 )
+    }
+
+    // need array of canvases to write pixels to
+    if(dst_canv == null){
+      var dst_canv = document.createElement('canvas')
+      var dst_ctx = dst_canv.getContext("2d")
+      var texture = new THREE.Texture( dst_canv )
+      dst_canv.width = 1024 //2048
+      dst_canv.height = 1024 //2048
+      this.update_mesh.material.map = texture
+    }
+    var pt = ptcldIdx(10)
+    getLayer( pt, this.video, this.video.videoHeight, dst_canv, dst_ctx )
+    this.update_mesh.material.map.needsUpdate = true
   },
   init_scene : function init_scene(){
     this.scene = new THREE.Scene();
@@ -112,16 +159,14 @@ var VIEW3D = {
 
       update: function update() {
         //this.water.material.uniforms.time.value += 1.0 / 60.0;
-        if ( VIEW3D.video.readyState === VIEW3D.video.HAVE_ENOUGH_DATA)
+        if ( this.video.readyState === this.video.HAVE_ENOUGH_DATA)
         {
-          //console.log('drawing')
-          this.video_context.drawImage( this.video, 0, 0, 128, 128 )
-          // 0, 0, w*shrinkFactor, videoImage.height*shrinkFactor, 0, 0, w, videoImage.height );
+          this.video_extract_layers()
 
         }
-        this.camera_position = VIEW3D.camera.position;
-        this.controls.update();
-        this.display();
+        this.camera_position = this.camera.position
+        this.controls.update()
+        this.display()
       },
 
       resize: function resize(inWidth, inHeight) {
@@ -142,7 +187,7 @@ var VIEW3D = {
           requestAnimationFrame(VIEW3D.mainLoop);
         }, 1000 / this.fps );
 
-        if(this.fps>5){this.fps--;}
+        //if(this.fps>5){this.fps--;}
         VIEW3D.update();
       }
 
@@ -503,6 +548,7 @@ $scope.buildLand = function( data ){
       mesh.receiveShadow = true
       mesh.position.y = (add * 2)
       mesh.rotation.x = - Math.PI * 0.5
+      VIEW3D.update_mesh = mesh
       dest.add(mesh)
     }
 
@@ -589,7 +635,8 @@ $scope.buildLand = function( data ){
 
     $scope.loadwxpng = function(){
       function loadLayers(ptcldcanv){
-        for( var lev = 1; lev < 60; lev += 1)
+        //for( var lev = 1; lev < 60; lev += 1)
+        for( var lev = 10; lev < 11; lev += 1)
         {
           var slicecanv = document.createElement('canvas')
           slicecanv.width = 1024 //2048
@@ -616,7 +663,7 @@ $scope.buildLand = function( data ){
               pixels.data[i+0] = v
               pixels.data[i+1] = v
               pixels.data[i+2] = v
-              pixels.data[i+3] = v * 0.2
+              pixels.data[i+3] = v * 0.8
             }
             ctx.putImageData( pixels, 0, 0 )
 
@@ -639,7 +686,7 @@ $scope.buildLand = function( data ){
                 VIEW3D.container.add( $scope.wx_mesh )
 
               }
-              $scope.saveCanvas()
+              //$scope.saveCanvas()
             }
 
             // get 70 level png
