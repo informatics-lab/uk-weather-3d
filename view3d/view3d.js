@@ -38,7 +38,7 @@ var VIEW3D = {
     this.video.crossOrigin = "Anonymous"
     this.video.autoplay = true
     this.video.load() // must call after setting/changing source
-    this.video.playbackRate = 4.0
+    this.video.playbackRate = 1.0
     this.video.addEventListener("loadedmetadata", function () {
       alert( 'video metadata loaded' )
       var o = VIEW3D
@@ -62,16 +62,16 @@ var VIEW3D = {
     var material = new THREE.MeshPhongMaterial({
       side: THREE.DoubleSide, map: texture, transparent: true, specular: 0xffffff, shininess: 90})
 
-    var geom =  new THREE.PlaneGeometry(2000, 2000)
-    var mesh = new THREE.Mesh(geom, material)
-    mesh.castShadow = true
-    mesh.receiveShadow = true
-    mesh.position.y = (vert * 2)
-    mesh.rotation.x = - Math.PI * 0.5
-    return {mesh:mesh, canvas:canv}
-  },
+      var geom =  new THREE.PlaneGeometry(2000, 2000)
+      var mesh = new THREE.Mesh(geom, material)
+      mesh.castShadow = true
+      mesh.receiveShadow = true
+      mesh.position.y = (vert * 10)
+      mesh.rotation.x = - Math.PI * 0.5
+      return {mesh:mesh, canvas:canv, vertical:vert}
+    },
 
-  video_extract_layers : function video_extract_layers(){
+    video_extract_layers : function video_extract_layers(){
       var ptcldIdx = function( n ){
         // The Point Cloud PNG has a grid of 5 x 6 tiles
         // after 30 the tiles are reused switching from R to
@@ -100,18 +100,15 @@ var VIEW3D = {
           }
           ctx.putImageData( pixels, 0, 0 )
         }
-
-        // need array of canvases to write pixels to
-        if(this.dst_canv == null){
-          this.dst_canv = document.createElement('canvas')
-          this.dst_ctx = this.dst_canv.getContext("2d")
-          this.dst_canv.width = 1024 //2048
-          this.dst_canv.height = 1024 //2048
-          //
+        for(var l=0; l<this.wx_layers.length; l++){
+          var lyr = this.wx_layers[l]
+          var pt = ptcldIdx(lyr.vertical)
+          getLayer( pt, this.video, this.video.videoHeight, lyr.canvas, lyr.context )
         }
-        var pt = ptcldIdx(10)
-        getLayer( pt, this.video, this.video.videoHeight, this.dst_canv, this.dst_ctx )
-        this.update_mesh.material.map.needsUpdate = true
+        for(var l=0; l<this.wx_layers.length; l++){
+          var lyr = this.wx_layers[l]
+          lyr.mesh.material.map.needsUpdate = true
+        }
       },
       init_scene : function init_scene(){
         this.scene = new THREE.Scene();
@@ -540,86 +537,89 @@ var VIEW3D = {
 
 
       $scope.getDEM = function( path, params ){
-          var requestParams = angular.copy( $scope.defaultDEMParams );
-          if(params.WIDTH){ requestParams.width=params.WIDTH; }
-          if(params.HEIGHT){ requestParams.height=params.HEIGHT; }
-          if(params.BBOX){ requestParams.bbox=params.BBOX; }
+        var requestParams = angular.copy( $scope.defaultDEMParams );
+        if(params.WIDTH){ requestParams.width=params.WIDTH; }
+        if(params.HEIGHT){ requestParams.height=params.HEIGHT; }
+        if(params.BBOX){ requestParams.bbox=params.BBOX; }
 
-          $scope.dem_width = requestParams.width;
-          $scope.dem_height = requestParams.height;
+        $scope.dem_width = requestParams.width;
+        $scope.dem_height = requestParams.height;
 
-          var bbox = requestParams['bbox'].split(',');
-          var bb = {'w':Number(bbox[0]),'s':Number(bbox[1]),'e':Number(bbox[2]),'n':Number(bbox[3])};
-          var storageName = requestParams['bbox'] + '_' + requestParams['width'] + '_' + requestParams['height']
+        var bbox = requestParams['bbox'].split(',');
+        var bb = {'w':Number(bbox[0]),'s':Number(bbox[1]),'e':Number(bbox[2]),'n':Number(bbox[3])};
+        var storageName = requestParams['bbox'] + '_' + requestParams['width'] + '_' + requestParams['height']
 
-          // Find mid point of each edge of the bounding box.
-          var nmid = new LatLon(bb.n, (bb.w + bb.e)*0.5);
-          var smid = new LatLon(bb.s, (bb.w + bb.e)*0.5);
-          var wmid = new LatLon((bb.n + bb.s)*0.5, bb.w);
-          var emid = new LatLon((bb.n + bb.s)*0.5, bb.e);
-          $scope.distns = nmid.distanceTo(smid);
-          $scope.distew = wmid.distanceTo(emid);
+        // Find mid point of each edge of the bounding box.
+        var nmid = new LatLon(bb.n, (bb.w + bb.e)*0.5);
+        var smid = new LatLon(bb.s, (bb.w + bb.e)*0.5);
+        var wmid = new LatLon((bb.n + bb.s)*0.5, bb.w);
+        var emid = new LatLon((bb.n + bb.s)*0.5, bb.e);
+        $scope.distns = nmid.distanceTo(smid);
+        $scope.distew = wmid.distanceTo(emid);
 
-          // load dem png
-          var imageObj = new Image();
-          $scope.landCanvas  = document.createElement( 'canvas' );
-          imageObj.onload = function(){
-            $scope.landCanvas.width = imageObj.width;
-            $scope.landCanvas.height = imageObj.height;
-            var context = $scope.landCanvas.getContext( '2d' );
-            context.drawImage( imageObj, 0, 0 );
-          };
-          imageObj.src = '/utils/uk_hi.png';
+        // load dem png
+        var imageObj = new Image();
+        $scope.landCanvas  = document.createElement( 'canvas' );
+        imageObj.onload = function(){
+          $scope.landCanvas.width = imageObj.width;
+          $scope.landCanvas.height = imageObj.height;
+          var context = $scope.landCanvas.getContext( '2d' );
+          context.drawImage( imageObj, 0, 0 );
+        };
+        imageObj.src = '/utils/uk_hi.png';
 
 
-          // DEM data unlikely to change so save to local storage.
-          // Also source is external (NASA) provider, so be responsible.
-          // To clear type 'localStorage.clear()' in console.
-          //if(localStorage[storageName]){
-          if(0){
-            console.log('LOADING FROM LOCAL STORAGE', storageName);
-            $scope.demdata = JSON.parse(localStorage[storageName]);
-            $scope.buildLand( $scope.demdata );
-          }else{
-            //$http.get($scope.demProviderUrl, {params:requestParams, responseType: "arraybuffer"}  ).
-            $http.get('/utils/dem.bin', {responseType: "arraybuffer"}).
-            success(function(data, status, headers, config) {
-              $scope.demdata = Array.prototype.slice.call(new Int16Array(data));
-              localStorage[storageName] = JSON.stringify($scope.demdata);
-              $scope.buildLand( $scope.demdata );
-            }).
-            error(function(data, status, headers, config) {
-              console.log(status, data);
-            });
-          }
-        }
-
-        $scope.fetchBuild = function( item, dest, done){
-          $http.get($scope.data_prefix + item.u, { responseType: "arraybuffer"}  ).
+        // DEM data unlikely to change so save to local storage.
+        // Also source is external (NASA) provider, so be responsible.
+        // To clear type 'localStorage.clear()' in console.
+        //if(localStorage[storageName]){
+        if(0){
+          console.log('LOADING FROM LOCAL STORAGE', storageName);
+          $scope.demdata = JSON.parse(localStorage[storageName]);
+          $scope.buildLand( $scope.demdata );
+        }else{
+          //$http.get($scope.demProviderUrl, {params:requestParams, responseType: "arraybuffer"}  ).
+          $http.get('/utils/dem.bin', {responseType: "arraybuffer"}).
           success(function(data, status, headers, config) {
-            var rawdata = Array.prototype.slice.call(new Float32Array(data));
-            //var rawdata = Array.prototype.slice.call(new Int16Array(data));
-            //var rawdata = Array.prototype.slice.call(new Uint8Array(data));
-            $scope.buildWx( dest, rawdata, $scope.dem_width, $scope.dem_height, item.a, Number($scope.wx_mult) );
-            done();
+            $scope.demdata = Array.prototype.slice.call(new Int16Array(data));
+            localStorage[storageName] = JSON.stringify($scope.demdata);
+            $scope.buildLand( $scope.demdata );
           }).
           error(function(data, status, headers, config) {
-            alert( 'Unable to load sample cloud data. Get help.' )
-            console.log(status, data)
-          })
+            console.log(status, data);
+          });
         }
+      }
 
-
-          $scope.getCoverage = function( path, params ){
-
-            $scope.wx_mesh = new THREE.Object3D()
-
-            var lyr = VIEW3D.buildWxLayer( 1024, 1024, 10 )
-            VIEW3D.dst_canv = lyr.canvas
-            VIEW3D.dst_ctx = lyr.canvas.getContext('2d')
-            VIEW3D.update_mesh = lyr.mesh
-            $scope.wx_mesh.add(lyr.mesh)
-            $scope.wx_mesh.updateMatrix()
-            VIEW3D.container.add( $scope.wx_mesh )
-          }
+      $scope.fetchBuild = function( item, dest, done){
+        $http.get($scope.data_prefix + item.u, { responseType: "arraybuffer"}  ).
+        success(function(data, status, headers, config) {
+          var rawdata = Array.prototype.slice.call(new Float32Array(data));
+          //var rawdata = Array.prototype.slice.call(new Int16Array(data));
+          //var rawdata = Array.prototype.slice.call(new Uint8Array(data));
+          $scope.buildWx( dest, rawdata, $scope.dem_width, $scope.dem_height, item.a, Number($scope.wx_mult) );
+          done();
+        }).
+        error(function(data, status, headers, config) {
+          alert( 'Unable to load sample cloud data. Get help.' )
+          console.log(status, data)
         })
+      }
+
+      $scope.getCoverage = function( path, params ){
+
+        $scope.wx_mesh = new THREE.Object3D()
+        VIEW3D.container.add( $scope.wx_mesh )
+        VIEW3D.wx_layers = []
+
+        var verts = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
+        for(var v=0; v<verts.length; v++ ){
+          //var lyr = VIEW3D.buildWxLayer( 1024, 1024, verts[v])
+          var lyr = VIEW3D.buildWxLayer( 256, 256, verts[v])
+          lyr.context = lyr.canvas.getContext('2d')
+          VIEW3D.wx_layers.push( lyr )
+          $scope.wx_mesh.add(lyr.mesh)
+          $scope.wx_mesh.updateMatrix()
+        }
+      }
+    })
