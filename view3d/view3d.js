@@ -22,7 +22,7 @@ var VIEW3D = {
   video_canv: null,
   video_canv_context: null,
   update_mesh: null,
-  wx_layers: {},
+  wx_layers: null,
   dst_ctx: null,
   dst_canv: null,
   init_video : function init_video()
@@ -111,10 +111,7 @@ var VIEW3D = {
         }
         var pt = ptcldIdx(10)
         getLayer( pt, this.video, this.video.videoHeight, this.dst_canv, this.dst_ctx )
-        //var texture = new THREE.Texture( this.dst_canv )
-        //this.update_mesh.material.map = texture
         this.update_mesh.material.map.needsUpdate = true
-        //console.log("updated?")
       },
       init_scene : function init_scene(){
         this.scene = new THREE.Scene();
