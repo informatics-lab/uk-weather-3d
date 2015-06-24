@@ -7,6 +7,23 @@
 //
 //
 
+var LAND = {
+  setSeaColour: function setSeaColour( canvas, image, colour ){
+    var context = canvas.getContext( '2d' )
+    context.drawImage( image, 0, 0 )
+    var imgdata = context.getImageData(0,0,canvas.width,canvas.height)
+    var pixels = imgdata.data
+    for(var i=0; i<pixels.length; i+=4){
+      if( pixels[i+3] == 0){
+        pixels[i] = colour.r
+        pixels[i+1] = colour.g
+        pixels[i+2] = colour.b
+        pixels[i+3] = 0xff
+      }
+    }
+    context.putImageData( imgdata, 0, 0 )
+  }
+}
 
 var VIEW3D = {
   scene : null,
@@ -171,28 +188,14 @@ var VIEW3D = {
             var uniforms1 = {
               time: { type: "f", value: 1.0 },
               resolution: { type: "v2", value: new THREE.Vector2() }
-            };
+            }
 
             var attributes = {
               displacement: {
                 type: 'f', // a float
                 value: [] // an empty array
               }
-            };
-
-            var shader_material = new THREE.MeshPhongMaterial({color: 0x4466dd});
-
-
-            var aMeshMirror = new THREE.Mesh(
-              new THREE.PlaneBufferGeometry(2000, 2000), shader_material
-            )
-            aMeshMirror.position.y = -10
-            aMeshMirror.rotation.x = - Math.PI * 0.5
-
-            aMeshMirror.castShadow = false
-            aMeshMirror.receiveShadow = true
-
-            this.scene.add(aMeshMirror)
+            }
 
             this.container = new THREE.Object3D()
             this.scene.add(this.container)
@@ -348,60 +351,7 @@ var VIEW3D = {
             VIEW3D.camera.position.set(0, 2000, 2000);
           }
 
-          // If you'd rather not use the followimg HTML5 canvas gradient trick,
-          // you can create palettes like this.
-          /*
-          $scope.paletteFn = function( v ){
-          var rgba = {'r':0,'g':0,'b':0,'a':0};
-          if (v < 1 ){
-          rgba.r = 15;
-          rgba.g = 15;
-          rgba.b = 255;
-          rgba.a = 0;
-        }else{
-        rgba.r = (v < 500) ? v/3 : 160;
-        rgba.g = (rgba.r < 100) ? 200-rgba.r: 128;
-        rgba.b = 0;
-        rgba.a = 255;
-      }
-      return rgba;
-    }
-    */
 
-    $scope.DemPaletteFn = function() {
-      var canvas = document.createElement( 'canvas' );
-      canvas.width = 256;
-      canvas.height = 1;
-
-      var context = canvas.getContext( '2d' );
-      var grad = context.createLinearGradient(0,0,256,0);
-      grad.addColorStop(0, "#108010");
-      grad.addColorStop(.6, "#606010");
-      grad.addColorStop(1, "#906030");
-
-      context.fillStyle = grad;
-      context.fillRect(0, 0, 256, 1);
-
-      var palette = [], r, g, b, a;
-      var image = context.getImageData( 0, 0, canvas.width, 1 );
-      for ( var i = 0; i < image.data.length; i += 4 ) {
-        r = image.data[ i ];
-        g = image.data[ i + 1 ];
-        b = image.data[ i + 2 ];
-        a = image.data[ i + 3 ];
-        palette.push({r:r,g:g,b:b,a:a});
-      }
-      var fn = function(v){
-        v = ~~v;
-        if(v < 1){
-          return {r:0,g:0,b:0,a:0};
-        }else{
-          v = (v>255) ? 255 : v;
-          return palette[v];
-        }
-      };
-      return fn;
-    }
 
     $scope.generateTexture = function(data, dem_width, dem_height ) {
       var palfn = $scope.DemPaletteFn();
@@ -539,34 +489,32 @@ var VIEW3D = {
     });
 
 
-    $scope.buildLand = function( data ){
-      $scope.landCanvas
-      var texture = new THREE.Texture( $scope.landCanvas );
+    $scope.buildLand = function( data, canvas ){
+      var texture = new THREE.Texture( canvas )
       //var texture = new THREE.Texture( $scope.generateTexture(data, $scope.dem_width, $scope.dem_height) );
-      texture.needsUpdate = true;
-      var material = new THREE.MeshPhongMaterial({
-        map: texture, transparent: true, specular: 0x444444, shininess: 10,
-        bumpMap: texture });
-        // (tranparent = true) allows sea to be seen.  Perhaps sea level should be dropped.
+      texture.needsUpdate = true
+      var material = new THREE.MeshPhongMaterial({ side: THREE.DoubleSide,
+        map: texture, transparent: false, specular: 0xffffff, shininess: 10})
+        // could add bumpmap
 
-        var geometry = new THREE.PlaneGeometry(2000, 2000, $scope.dem_width-1, $scope.dem_height-1);
+        var geometry = new THREE.PlaneGeometry(2000, 2000, $scope.dem_width-1, $scope.dem_height-1)
         var scale_fac = 2000.0 /  ($scope.distns * 1000.0);
         for(i = 0; i < data.length; i++){
-          var ht = data[i];
-          if(ht < 0){ht = 0;}
-          geometry.vertices[i].z = (ht * 10.0 * scale_fac) + 5.0;
+          var ht = data[i]
+          if(ht < 0){ht = 0}
+          geometry.vertices[i].z = (ht * 10.0 * scale_fac) + 5.0
         }
-        var bufferGeometry = new THREE.BufferGeometry();
-        bufferGeometry.fromGeometry( geometry );
-        geometry = null;
-        var mesh = new THREE.Mesh(bufferGeometry, material);
-        mesh.castShadow = false;
-        mesh.receiveShadow = true;
-        mesh.position.z = 0;
-        mesh.rotation.x = - Math.PI * 0.5;
+        var bufferGeometry = new THREE.BufferGeometry()
+        bufferGeometry.fromGeometry( geometry )
+        geometry = null
+        var mesh = new THREE.Mesh(bufferGeometry, material)
+        mesh.castShadow = false
+        mesh.receiveShadow = true
+        mesh.position.z = 0
+        mesh.rotation.x = - Math.PI * 0.5
         //THREE.GeometryUtils.merge(geometry, mesh);
-        $scope.dem_mesh = mesh;
-        VIEW3D.container.add(mesh);
+        $scope.dem_mesh = mesh
+        VIEW3D.container.add(mesh)
       }
 
 
@@ -593,14 +541,13 @@ var VIEW3D = {
         $scope.distew = wmid.distanceTo(emid);
 
         // load dem png
-        var imageObj = new Image();
-        $scope.landCanvas  = document.createElement( 'canvas' );
+        var imageObj = new Image()
+        $scope.landCanvas  = document.createElement( 'canvas' )
         imageObj.onload = function(){
-          $scope.landCanvas.width = imageObj.width;
-          $scope.landCanvas.height = imageObj.height;
-          var context = $scope.landCanvas.getContext( '2d' );
-          context.drawImage( imageObj, 0, 0 );
-        };
+          $scope.landCanvas.width = imageObj.width
+          $scope.landCanvas.height = imageObj.height
+          LAND.setSeaColour( $scope.landCanvas, imageObj, {r:0x11,g:0x44,b:0xaa} )
+        }
         imageObj.src = '/utils/uk_hi.png';
 
 
@@ -616,12 +563,12 @@ var VIEW3D = {
           //$http.get($scope.demProviderUrl, {params:requestParams, responseType: "arraybuffer"}  ).
           $http.get('/utils/dem.bin', {responseType: "arraybuffer"}).
           success(function(data, status, headers, config) {
-            $scope.demdata = Array.prototype.slice.call(new Int16Array(data));
-            localStorage[storageName] = JSON.stringify($scope.demdata);
-            $scope.buildLand( $scope.demdata );
+            $scope.demdata = Array.prototype.slice.call(new Int16Array(data))
+            localStorage[storageName] = JSON.stringify($scope.demdata)
+            $scope.buildLand( $scope.demdata, $scope.landCanvas )
           }).
           error(function(data, status, headers, config) {
-            console.log(status, data);
+            console.log(status, data)
           });
         }
       }
