@@ -18,6 +18,7 @@ var VIEW3D = {
   directionalLight : null,
   fps: 30,  // 30 is current Firefox max, as far as I can tell.
   // Chrome will go up to 60 which gets GPU hot.
+  navigate: false,
   video: null,
   video_canv: null,
   video_canv_context: null,
@@ -40,7 +41,7 @@ var VIEW3D = {
     this.video.load() // must call after setting/changing source
     this.video.playbackRate = 1.0
     this.video.addEventListener("loadedmetadata", function () {
-      alert( 'video metadata loaded' )
+      //alert( 'video metadata loaded' )
       var o = VIEW3D
       o.video_canv.width = o.video.videoWidth
       o.video_canv.height = o.video.videoHeight
@@ -48,6 +49,9 @@ var VIEW3D = {
     })
     this.video.addEventListener('loadeddata', function() {
       VIEW3D.video.play()
+      VIEW3D.navigate = false
+
+
     })
     this.video_canv_context = this.video_canv.getContext("2d")
   },
@@ -90,15 +94,32 @@ var VIEW3D = {
           x_0, y_0, 623, 812,
           0, 0, dstcanv.width, dstcanv.height)
 
-          var pixels = ctx.getImageData(0,0,dstcanv.width,dstcanv.height)
-          for(var i=0; i<pixels.data.length; i += 4){
-            var v = pixels.data[i+ptcld.ci]
-            pixels.data[i+0] = v
-            pixels.data[i+1] = v
-            pixels.data[i+2] = v
-            pixels.data[i+3] = v * 0.8
+          var imgdata = ctx.getImageData(0,0,dstcanv.width,dstcanv.height)
+          var pixels = imgdata.data
+          var buf = new ArrayBuffer(imgdata.data.length)
+          var buf8 = new Uint8ClampedArray(buf)
+          var buf32 = new Uint32Array(buf)
+          buf8.set(imgdata.data)
+          /*
+          for(var i=0; i<buf8.length; i += 4){
+            var v = buf8[i+ptcld.ci]
+            buf8[i+0] = v
+            buf8[i+1] = v
+            buf8[i+2] = v
+            buf8[i+3] = v * 0.4
           }
-          ctx.putImageData( pixels, 0, 0 )
+          */
+          for(var i=0; i<buf32.length; i++){
+            var v = (buf32[i] >> (ptcld.ci*8)) & 0xff
+            buf32[i] = ((v*0.4) << 24) | // a
+            (v << 16) | // b
+            (v << 8) | // g
+            v // r
+
+          }
+          imgdata.data.set(buf8)
+          ctx.putImageData( imgdata, 0, 0 )
+
         }
         for(var l=0; l<this.wx_layers.length; l++){
           var lyr = this.wx_layers[l]
@@ -118,9 +139,21 @@ var VIEW3D = {
           this.camera.lookAt(new THREE.Vector3(0, 0, 0));
 
           this.controls = new THREE.TrackballControls(this.camera);
-          this.controls.addEventListener( 'change', function(){VIEW3D.fps=30;});
+          this.controls.addEventListener( 'change', function(){
+            // VIEW3D.fps=30
+            VIEW3D.video.pause()
+            VIEW3D.navigate = true
+            setTimeout( function() {
+              VIEW3D.navigate = false
+            }, 2000 )
+            setTimeout( function() {
+              if(VIEW3D.navigate == false){
+                VIEW3D.video.play()
+              }
+            }, 3000 )
 
-          //this.renderer = new THREE.WebGLRenderer({alpha: true});
+            })
+
           this.mycanvas = document.createElement('canvas');
           this.renderer = new THREE.WebGLRenderer({canvas: this.mycanvas,
             preserveDrawingBuffer   : true,
@@ -147,21 +180,22 @@ var VIEW3D = {
               }
             };
 
-            var shader_material = new THREE.MeshPhongMaterial({color: 0x444488});
+            var shader_material = new THREE.MeshPhongMaterial({color: 0x4466dd});
 
 
             var aMeshMirror = new THREE.Mesh(
-              new THREE.PlaneBufferGeometry(2000, 2000, 100, 100), shader_material
-            );
-            aMeshMirror.rotation.x = - Math.PI * 0.5;
+              new THREE.PlaneBufferGeometry(2000, 2000), shader_material
+            )
+            aMeshMirror.position.y = -10
+            aMeshMirror.rotation.x = - Math.PI * 0.5
 
-            aMeshMirror.castShadow = false;
-            aMeshMirror.receiveShadow = true;
+            aMeshMirror.castShadow = false
+            aMeshMirror.receiveShadow = true
 
-            this.scene.add(aMeshMirror);
+            this.scene.add(aMeshMirror)
 
-            this.container = new THREE.Object3D();
-            this.scene.add(this.container);
+            this.container = new THREE.Object3D()
+            this.scene.add(this.container)
           },
 
 
@@ -175,10 +209,11 @@ var VIEW3D = {
 
           update: function update() {
             //this.water.material.uniforms.time.value += 1.0 / 60.0;
-            if ( this.video.readyState === this.video.HAVE_ENOUGH_DATA)
-            {
-              this.video_extract_layers()
-
+            if(this.navigate == false){
+              if ( this.video.readyState === this.video.HAVE_ENOUGH_DATA)
+              {
+                this.video_extract_layers()
+              }
             }
             this.camera_position = this.camera.position
             this.controls.update()
