@@ -90,7 +90,7 @@ var LAND = {
         console.log("vid width", o.video_canv.width)
       })
       this.video.addEventListener('loadeddata', function() {
-        //VIEW3D.video.play()
+        VIEW3D.video.play()
         VIEW3D.navigate = false
 
 
@@ -190,7 +190,7 @@ var LAND = {
             }, 2000 )
             setTimeout( function() {
               if(VIEW3D.navigate == false){
-                //VIEW3D.video.play()
+                VIEW3D.video.play()
               }
             }, 3000 )
 
@@ -251,11 +251,10 @@ var LAND = {
           },
 
           resize: function resize(inWidth, inHeight) {
-            this.camera.aspect =  inWidth / inHeight;
-            this.camera.updateProjectionMatrix();
-            this.renderer.setSize(inWidth, inHeight);
-            //this.canvas.html(this.renderer.domElement);
-            this.display();
+            this.camera.aspect =  inWidth / inHeight
+            this.camera.updateProjectionMatrix()
+            this.renderer.setSize(inWidth, inHeight)
+            this.display()
           },
 
           mainLoop: function() {
@@ -265,11 +264,11 @@ var LAND = {
             // fps is increased when the controls are moved.  Gives a much
             // smoother experience.
             setTimeout( function() {
-              requestAnimationFrame(VIEW3D.mainLoop);
-            }, 1000 / this.fps );
+              requestAnimationFrame(VIEW3D.mainLoop)
+            }, 1000 / this.fps )
 
             //if(this.fps>5){this.fps--;}
-            VIEW3D.update();
+            VIEW3D.update()
           }
 
         };
@@ -290,7 +289,9 @@ var LAND = {
           $scope.position = null; // camera position
 
           // The OpenShift application allows cross origin requests (for now).
-          $scope.demProviderUrl = "http://python-wetoffice.rhcloud.com/dembin";
+          $scope.demProviderUrl = "http://python-wetoffice.rhcloud.com/dembin"
+          $scope.demProviderPng = "http://python-wetoffice.rhcloud.com/demcanv?bbox=-12,50,3.5,59&srs=EPSG:4326"
+
           //$scope.wxProviderUrl = "http://python-wetoffice.rhcloud.com/capbin";
           // To use your own (local) server for data replace with these -
           //$scope.demProviderUrl = "/dembin";
@@ -335,14 +336,12 @@ var LAND = {
             $scope.getCoverage( $location.path(), params );
           })
 
-          $scope.$watchGroup(['light_x','light_y','light_z'], function(){
-            //VIEW3D.directionalLight.position.set(Number($scope.light_x), Number($scope.light_y), Number($scope.light_z));
-          });
-
+          /*
           $scope.$watchGroup(['camera_x','camera_y','camera_z'], function(){
             $location.search('camera='+$scope.camera_x+':'+$scope.camera_y+':'+$scope.camera_z)
             VIEW3D.camera.position.set(Number($scope.camera_x), Number($scope.camera_y), Number($scope.camera_z));
-          });
+          })
+          */
 
           $scope.getCameraPosition = function() {
             $scope.position = VIEW3D.camera.position
@@ -566,7 +565,8 @@ var LAND = {
                 });
               }
             }
-            imageObj.src = '/utils/uk_hi.png'
+            imageObj.crossOrigin="anonymous"
+            imageObj.src = $scope.demProviderPng
 
           }
 
