@@ -90,7 +90,7 @@ var LAND = {
         console.log("vid width", o.video_canv.width)
       })
       this.video.addEventListener('loadeddata', function() {
-        VIEW3D.video.play()
+        //VIEW3D.video.play()
         VIEW3D.navigate = false
 
 
@@ -190,7 +190,7 @@ var LAND = {
             }, 2000 )
             setTimeout( function() {
               if(VIEW3D.navigate == false){
-                VIEW3D.video.play()
+                //VIEW3D.video.play()
               }
             }, 3000 )
 
@@ -235,12 +235,14 @@ var LAND = {
             }
           },
 
+          have_data: false,
+
           update: function update() {
-            //this.water.material.uniforms.time.value += 1.0 / 60.0;
-            if(this.navigate == false){
+            if((this.video.paused == false)||(this.have_data == false)){
               if ( this.video.readyState === this.video.HAVE_ENOUGH_DATA)
               {
-                this.video_extract_layers()
+                  this.video_extract_layers()
+                  this.have_data = true
               }
             }
             this.camera_position = this.camera.position
@@ -338,6 +340,7 @@ var LAND = {
           });
 
           $scope.$watchGroup(['camera_x','camera_y','camera_z'], function(){
+            $location.search('camera='+$scope.camera_x+':'+$scope.camera_y+':'+$scope.camera_z)
             VIEW3D.camera.position.set(Number($scope.camera_x), Number($scope.camera_y), Number($scope.camera_z));
           });
 
@@ -500,8 +503,16 @@ var LAND = {
           // Should we update the data selection, etc. if the search changes?
           // Probably, yes.
           $scope.$watch('location.search()', function(){
-            //console.log('PATH', $location.path());
-            //console.log('SEARCH',  $location.search());
+            console.log('SEARCH',  $location.search())
+            var search = $location.search()
+            if(search.camera){
+              console.log("CAMERA TO", search.camera.split(':'))
+              var cam_posn = search.camera.split(':')
+              $scope.camera_x = Number(cam_posn[0])
+              $scope.camera_y = Number(cam_posn[1])
+              $scope.camera_z = Number(cam_posn[2])
+            }
+
             //$scope.getDEM( $location.path(), $location.search() );
             //$scope.getCoverage( $location.path(), $location.search() );
           });
