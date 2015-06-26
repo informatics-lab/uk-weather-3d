@@ -201,7 +201,8 @@ var LAND = {
             preserveDrawingBuffer   : true,
             alpha: true});
             this.renderer.setSize(window.innerWidth, window.innerHeight);
-            this.renderer.setClearColor( 0x6666ff, 1);
+            //this.renderer.setClearColor( 0x6666ff, 1);
+            this.renderer.setClearColor( "rgb(135, 206, 250)", 1);
 
 
             var light = new THREE.AmbientLight( 0xaaaaaa ); // white light

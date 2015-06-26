@@ -4,7 +4,7 @@ html, body {
 }
 
 body {
-    position: relative; /* needed for the overlay to extend when you scroll */
+    /*position: relative; */ /* needed for the overlay to extend when you scroll */
     /* general styles */
     padding: 0;
     font-family: 'Open Sans', sans-serif;

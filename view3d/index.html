@@ -14,12 +14,13 @@
   <script src="extras/controls/TrackballControls.js"></script>
   <script src="extras/libs/stats.min.js"></script>
   <link href="view3d.css" rel="stylesheet">
-  <!-- link href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet" -->
-  <!-- <script src="water-material.js"></script> -->
   <script src="extras/latlon.js"></script>
 
 </head>
 <body ng-app="viewer">
+  <div>
+      <img src="https://dl.dropboxusercontent.com/u/2665124/volume_rendering_data/prototype.png" style="max-width: 15%; height: auto; position: absolute; top:75%; left: 1%">
+  </div>
   <div ng-controller="MainController">
     <!-- add class="ng-hide" to hide -->
     <div ng-style="modalStyle" class="modal" ng-mouseenter="controlsActive(false)" ng-mouseleave="controlsActive(true)">
