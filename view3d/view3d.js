@@ -110,9 +110,7 @@ var LAND = {
       this.video.addEventListener('loadeddata', function() {
         //VIEW3D.video.play()
         VIEW3D.navigate = false
-
         console.log("dims", VIEW3D.data_dims)
-        alert("and pause")
       })
       this.video_canv_context = this.video_canv.getContext("2d")
     },
@@ -142,9 +140,10 @@ var LAND = {
           // after 30 the tiles are reused switching from R to
           // G channel, and finally B.
           var ptcld = {}
-          ptcld.xi = n % 6
-          ptcld.yi = (~~(n / 6)) % 5
-          ptcld.ci = ~~(n / 30)
+          //ptcld.xi = n % 6
+          //ptcld.yi = (~~(n / 6)) % 5
+          ptcld.yi = n % 18
+          ptcld.ci = ~~(n / 18)
 
 
           return ptcld
@@ -614,7 +613,7 @@ var LAND = {
             VIEW3D.container.add( $scope.wx_mesh )
             VIEW3D.wx_layers = []
 
-            var verts = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
+            var verts = [0,1,2,3,4,6,7,8,9,10,12,14,,16,18,20,22,,24,26,28,30, 35, 40, 45, 50, 53]
             for(var v=0; v<verts.length; v++ ){
               //var lyr = VIEW3D.buildWxLayer( 1024, 1024, verts[v])
               var lyr = VIEW3D.buildWxLayer( 256, 256, verts[v])

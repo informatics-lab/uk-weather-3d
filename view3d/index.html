@@ -23,7 +23,7 @@
   </div>
   <div ng-controller="MainController">
     <!-- add class="ng-hide" to hide -->
-    <div ng-style="modalStyle" class="modal" ng-mouseenter="controlsActive(false)" ng-mouseleave="controlsActive(true)">
+    <div ng-style="modalStyle" class="modal ng-hide" ng-mouseenter="controlsActive(false)" ng-mouseleave="controlsActive(true)">
       <div id="info">
         <!-- <button ng-click="rebuildWx()">reload wx</button><br> -->
         <button ng-click="saveCanvas()">save image</button><br>
