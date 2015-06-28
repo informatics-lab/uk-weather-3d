@@ -68,10 +68,28 @@ var LAND = {
     wx_layers: null,
     dst_ctx: null,
     dst_canv: null,
+    data_dims: null,
+    getDims : function getDims(url) {
+    // using a synchronous request for now...
+      var req = new XMLHttpRequest();
+      req.open("get", url, false);
+      req.send();
+      var response = JSON.parse(req.responseText);
+
+      var result = {datashape:null, textureshape:null};
+
+      result.datashape = response.data_dimensions;
+      result.datashape.y += 2; // just for now, to take account of padding
+      result.textureshape = response.resolution;
+      return result;
+    },
     init_video : function init_video()
     {
       this.video_canv  = document.createElement( 'canvas' )
-      var file = "cloud_frac2_623_812_70_4096_4096.ogv"
+      //var file = "cloud_frac2_623_812_70_4096_4096.ogv"
+      var url = "http://ec2-52-16-246-202.eu-west-1.compute.amazonaws.com:9000/molab-3dwx-ds/media/5589758be4b0b14cba172762"
+      var file = url + "/data"
+      this.data_dims = this.getDims(url)      
 
       this.video = document.createElement( 'video' )
       this.video.loop = true
@@ -88,12 +106,14 @@ var LAND = {
         o.video_canv.width = o.video.videoWidth
         o.video_canv.height = o.video.videoHeight
         console.log("vid width", o.video_canv.width)
+
       })
       this.video.addEventListener('loadeddata', function() {
         VIEW3D.video.play()
         VIEW3D.navigate = false
 
-
+        console.log("dims", VIEW3D.data_dims)
+        alert("and pause")
       })
       this.video_canv_context = this.video_canv.getContext("2d")
     },
