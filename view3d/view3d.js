@@ -89,7 +89,7 @@ var LAND = {
       //var file = "cloud_frac2_623_812_70_4096_4096.ogv"
       var url = "http://ec2-52-16-246-202.eu-west-1.compute.amazonaws.com:9000/molab-3dwx-ds/media/5589758be4b0b14cba172762"
       var file = url + "/data"
-      this.data_dims = this.getDims(url)      
+      this.data_dims = this.getDims(url)
 
       this.video = document.createElement( 'video' )
       this.video.loop = true
@@ -105,11 +105,10 @@ var LAND = {
         var o = VIEW3D
         o.video_canv.width = o.video.videoWidth
         o.video_canv.height = o.video.videoHeight
-        console.log("vid width", o.video_canv.width)
-
+        console.log("vid height", o.video_canv.height)
       })
       this.video.addEventListener('loadeddata', function() {
-        VIEW3D.video.play()
+        //VIEW3D.video.play()
         VIEW3D.navigate = false
 
         console.log("dims", VIEW3D.data_dims)
@@ -146,14 +145,17 @@ var LAND = {
           ptcld.xi = n % 6
           ptcld.yi = (~~(n / 6)) % 5
           ptcld.ci = ~~(n / 30)
+
+
           return ptcld
         }
         var getLayer = function ( ptcld, src, srcHeight, dstcanv, ctx ){
 
-          var x_0 = 623 * ptcld.xi
-          var y_0 = srcHeight - (812 * (ptcld.yi + 1))
+          var x_0 = 0 //623 * ptcld.xi
+          //var y_0 = srcHeight - (812 * (ptcld.yi + 1))
+          var y_0 = srcHeight - (VIEW3D.data_dims.datashape.y * (ptcld.yi +1))
           ctx.drawImage(src,
-            x_0, y_0, 623, 812,
+            x_0, y_0, VIEW3D.data_dims.datashape.x, VIEW3D.data_dims.datashape.y,
             0, 0, dstcanv.width, dstcanv.height)
 
             var imgdata = ctx.getImageData(0,0,dstcanv.width,dstcanv.height)
@@ -210,7 +212,7 @@ var LAND = {
             }, 2000 )
             setTimeout( function() {
               if(VIEW3D.navigate == false){
-                VIEW3D.video.play()
+                //VIEW3D.video.play()
               }
             }, 3000 )
 
