@@ -65,16 +65,10 @@ var LAND = {
     defaultParams: {
       request: "GetCoverage",
       crs: "EPSG:4326",
-      //bbox: $scope.bboxChoice,
-      //width: $scope.dem_width,
-      //height: $scope.dem_height,
       width: 256,
       height: 256,
       format: "AAIGrid_INT16"
     },
-
-    demProviderUrl: "http://python-wetoffice.rhcloud.com/dembin",
-    demProviderPng: "http://python-wetoffice.rhcloud.com/demcanv?bbox=-12,50,3.5,59&srs=EPSG:4326",
 
     pngParamsStr: function( params ){
       var p = {}
