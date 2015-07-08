@@ -7,48 +7,6 @@
 //
 //
 
-var LAND = {
-  setSeaColour: function setSeaColour( canvas, image, colour ){
-    var context = canvas.getContext( '2d' )
-    context.drawImage( image, 0, 0 )
-    var imgdata = context.getImageData(0,0,canvas.width,canvas.height)
-    var pixels = imgdata.data
-    for(var i=0; i<pixels.length; i+=4){
-      if( pixels[i+3] == 0){
-        pixels[i] = colour.r
-        pixels[i+1] = colour.g
-        pixels[i+2] = colour.b
-        pixels[i+3] = 0xff
-      }
-    }
-    context.putImageData( imgdata, 0, 0 )
-  },
-
-  buildLand: function buildLand( data, width, height, scale_fac, canvas ){
-    var texture = new THREE.Texture( canvas )
-    texture.needsUpdate = true
-    var material = new THREE.MeshPhongMaterial({ side: THREE.DoubleSide,
-      map: texture, transparent: false, specular: 0xffffff, shininess: 10})
-      // could add bumpmap
-
-      var geometry = new THREE.PlaneGeometry(2000, 2000, width-1, height-1)
-
-      for(i = 0; i < data.length; i++){
-        var ht = data[i]
-        if(ht < 0){ht = 0}
-        geometry.vertices[i].z = (ht * 10.0 * scale_fac) + 5.0
-      }
-      var bufferGeometry = new THREE.BufferGeometry()
-      bufferGeometry.fromGeometry( geometry )
-      geometry = null
-      var mesh = new THREE.Mesh(bufferGeometry, material)
-      mesh.castShadow = false
-      mesh.receiveShadow = true
-      mesh.position.z = 0
-      mesh.rotation.x = - Math.PI * 0.5
-      return mesh
-    }
-  }
 
   var VIEW3D = {
     scene : null,
@@ -299,7 +257,7 @@ var LAND = {
         VIEW3D.init_scene()
 
 
-        angular.module('viewer', []).controller("MainController", function($scope, $http, $location){
+        angular.module('viewer', []).controller("MainController", function($scope, $q, $http, $location){
 
           $scope.dem_width = 256;
           $scope.dem_height = 256;
@@ -312,7 +270,8 @@ var LAND = {
 
           // The OpenShift application allows cross origin requests (for now).
           $scope.demProviderUrl = "http://python-wetoffice.rhcloud.com/dembin"
-          $scope.demProviderPng = "http://python-wetoffice.rhcloud.com/demcanv?bbox=-12,50,3.5,59&srs=EPSG:4326"
+          //$scope.demProviderPng = "http://python-wetoffice.rhcloud.com/demcanv?bbox=-12,50,3.5,59&srs=EPSG:4326"
+          $scope.demProviderPng = "http://python-wetoffice.rhcloud.com/demcanv"
 
           //$scope.wxProviderUrl = "http://python-wetoffice.rhcloud.com/capbin";
           // To use your own (local) server for data replace with these -
@@ -351,10 +310,8 @@ var LAND = {
             if($scope.wx_mesh){VIEW3D.container.remove( $scope.wx_mesh )};
             //if($scope.dem_mesh){VIEW3D.container.remove( $scope.dem_mesh )};
             var params = angular.copy( $location.search());
-            params.BBOX = $scope.bboxChoice;
-            //console.log('PATH', $location.path());
-            //console.log('SEARCH', params);
-            $scope.getDEM( $location.path(), params );
+            params.bbox = $scope.bboxChoice;
+            $scope.getLand( $location.path(), params );
             $scope.getCoverage( $location.path(), params );
           })
 
@@ -534,62 +491,22 @@ var LAND = {
               $scope.camera_z = Number(cam_posn[2])
             }
 
-            //$scope.getDEM( $location.path(), $location.search() );
+            //$scope.getLand( $location.path(), $location.search() );
             //$scope.getCoverage( $location.path(), $location.search() );
-          });
+          })
 
-          $scope.getDEM = function( path, params ){
-            var requestParams = angular.copy( $scope.defaultDEMParams );
-            if(params.WIDTH){ requestParams.width=params.WIDTH; }
-            if(params.HEIGHT){ requestParams.height=params.HEIGHT; }
-            if(params.BBOX){ requestParams.bbox=params.BBOX; }
-
-            $scope.dem_width = requestParams.width;
-            $scope.dem_height = requestParams.height;
-
-            var bbox = requestParams['bbox'].split(',');
-            var bb = {'w':Number(bbox[0]),'s':Number(bbox[1]),'e':Number(bbox[2]),'n':Number(bbox[3])};
-            var storageName = requestParams['bbox'] + '_' + requestParams['width'] + '_' + requestParams['height']
-
-            // Find mid point of each edge of the bounding box.
-            var nmid = new LatLon(bb.n, (bb.w + bb.e)*0.5);
-            var smid = new LatLon(bb.s, (bb.w + bb.e)*0.5);
-            var wmid = new LatLon((bb.n + bb.s)*0.5, bb.w);
-            var emid = new LatLon((bb.n + bb.s)*0.5, bb.e);
-            $scope.distns = nmid.distanceTo(smid);
-            $scope.distew = wmid.distanceTo(emid);
-
-            // load dem png
-            var imageObj = new Image()
-            var landCanvas  = document.createElement( 'canvas' )
-            var demdata = null
-            var scale_fac = 2000.0 /  ($scope.distns * 1000.0)
-            imageObj.onload = function(){
-              landCanvas.width = imageObj.width
-              landCanvas.height = imageObj.height
-              LAND.setSeaColour( landCanvas, imageObj, {r:0x11,g:0x44,b:0xaa} )
-              // DEM data isn't going to change so save to local storage.
-              // Also source is external (not Met Office) provider, so be responsible.
-              if(localStorage[storageName]){
-                console.log('LOADING FROM LOCAL STORAGE', storageName)
-                console.log('To clear type localStorage.clear() in console')
-                demdata = JSON.parse(localStorage[storageName])
-                VIEW3D.container.add(LAND.buildLand( demdata, $scope.dem_width, $scope.dem_height, scale_fac, landCanvas))
-              }else{
-                $http.get($scope.demProviderUrl, {params:requestParams, responseType: "arraybuffer"}  ).
-                success(function(data, status, headers, config) {
-                  demdata = Array.prototype.slice.call(new Int16Array(data))
-                  localStorage[storageName] = JSON.stringify(demdata)
-                  VIEW3D.container.add(LAND.buildLand( demdata, $scope.dem_width, $scope.dem_height, scale_fac, landCanvas))
-                }).
-                error(function(data, status, headers, config) {
-                  console.log(status, data)
-                });
-              }
-            }
-            imageObj.crossOrigin="anonymous"
-            imageObj.src = $scope.demProviderPng
-
+          $scope.getLand = function( path, params){
+                        var img = new Image()
+                        var demPromise = $http.get($scope.demProviderUrl, {params:LAND.demParams(params), responseType: "arraybuffer"}  )
+                        img.onload = function(){
+                          demPromise.success(function(data, status, headers, config) {
+                            demdata = Array.prototype.slice.call(new Int16Array(data))
+                            var mesh = LAND.buildLand( img, demdata, params )
+                            VIEW3D.container.add( mesh )
+                          })
+                        }
+                        img.crossOrigin="anonymous"
+                        img.src = $scope.demProviderPng + LAND.pngParamsStr(params)
           }
 
           $scope.fetchBuild = function( item, dest, done){
